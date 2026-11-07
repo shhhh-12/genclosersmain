@@ -1,26 +1,291 @@
 @import "tailwindcss";
 
+/* ------------------------------------------------------------------
+   GenClosers design tokens: "Call Sheet"
+   Ink and paper, with red used only as a signal.
+   Every colour, size and timing in the UI comes from here.
+------------------------------------------------------------------- */
+
+@theme {
+  /* Colour */
+  --color-ink: #0c0b0b;
+  --color-ink-2: #151313;
+  --color-ink-3: #221f1f;
+  --color-ink-line: #2e2a2a;
+  --color-paper: #f3f1ec;
+  --color-paper-2: #e9e6df;
+  --color-paper-line: #d4cfc5;
+  --color-mute-dark: #a39d95; /* secondary text on ink */
+  --color-mute-light: #5c5751; /* secondary text on paper */
+  --color-signal: #e3101b; /* brand red, derived from the logo */
+  --color-signal-deep: #a10b13;
+  --color-signal-ink: #fff5f2; /* text on red */
+
+  /* Type families */
+  --font-display: var(--font-chillax), ui-sans-serif;
+  --font-body: var(--font-chillax), ui-sans-serif;
+  --font-mono: var(--font-space-mono), ui-monospace;
+
+  /* Fluid type scale (min at 375px, max at 1440px) */
+  --text-label: 0.75rem;
+  --text-label--letter-spacing: 0.14em;
+  --text-small: 0.9375rem;
+  --text-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+  --text-body--line-height: 1.6;
+  --text-lead: clamp(1.25rem, 1.1rem + 0.6vw, 1.625rem);
+  --text-lead--line-height: 1.4;
+  --text-h3: clamp(1.5rem, 1.3rem + 0.9vw, 2.125rem);
+  --text-h3--line-height: 1.15;
+  --text-h2: clamp(2.25rem, 1.6rem + 2.8vw, 4.25rem);
+  --text-h2--line-height: 1.02;
+  --text-h1: clamp(2.75rem, 1.7rem + 4.6vw, 6.5rem);
+  --text-h1--line-height: 0.96;
+  --text-mega: clamp(3.5rem, 1.5rem + 8.5vw, 10.5rem);
+  --text-mega--line-height: 0.9;
+
+  /* Radii: mostly sharp, one soft value for buttons and media */
+  --radius-sharp: 2px;
+  --radius-soft: 14px;
+  --radius-pill: 999px;
+
+  /* Shadows: used sparingly, mainly to lift media off ink */
+  --shadow-media: 0 30px 80px -30px rgb(0 0 0 / 0.65);
+  --shadow-press: 0 1px 0 0 rgb(255 255 255 / 0.12) inset;
+
+  /* Motion: one language, reused everywhere */
+  --ease-primary: cubic-bezier(0.16, 1, 0.3, 1); /* strong ease-out */
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-cut: cubic-bezier(0.83, 0, 0.17, 1); /* the razor cut */
+
+  /* Content widths */
+  --container-prose: 40rem;
+  --container-page: 84rem;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Motion durations and stagger, read by JS (see src/lib/motion.ts) */
+  --dur-fast: 200ms;
+  --dur-base: 450ms;
+  --dur-slow: 800ms;
+  --dur-reveal: 1100ms;
+  --stagger: 70ms;
+
+  /* Spacing rhythm for sections */
+  --gutter: clamp(1rem, 0.6rem + 1.8vw, 2.5rem);
+  --section-y: clamp(3.5rem, 2.5rem + 4vw, 7rem);
+
+  color-scheme: dark;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--color-ink);
+  color: var(--color-paper);
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: 1.6;
+  font-weight: 400;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-signal);
+  color: var(--color-signal-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-signal);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Lenis smooth scroll housekeeping */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* Home intro gate (see components/home/IntroTear.tsx) */
+html[data-intro="done"] #gc-intro {
+  display: none;
+}
+html[data-intro="play"] body {
+  overflow: hidden;
+}
+/* Safety net: if scripts never run, the intro hides itself after 12s. */
+#gc-intro {
+  animation: intro-failsafe 0s linear 12s forwards;
+}
+@keyframes intro-failsafe {
+  to {
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+/* Scroll-read headings (components/motion/ScrollRead.tsx) */
+.scroll-read [data-c] {
+  transition: color 0.25s linear, opacity 0.25s linear;
+}
+.scroll-read [data-s="0"] {
+  opacity: 0.22;
+}
+.scroll-read [data-s="1"] {
+  color: var(--color-signal);
+  opacity: 1;
+}
+.scroll-read.settle-signal [data-s="2"] {
+  color: var(--color-signal);
+}
+
+/* Spoke wheel size: 190px on the 1920 reference */
+.wheel-size {
+  font-size: clamp(2.6rem, 9.9vw, 190px);
+}
+
+/* Wheel word opacity = its own level (--o, set per frame) x the "others" level on the layer.
+   Fading --others to 0 leaves only the highlighted word ("everything black" moments). */
+.wheel-word {
+  opacity: calc(var(--o, 0) * var(--self, 1));
+}
+.wheel-word:not(.is-solo) {
+  opacity: calc(var(--o, 0) * var(--self, 1) * var(--others, 1));
+}
+.countdown-big {
+  font-size: clamp(3rem, 1rem + 7vw, 8.5rem);
+}
+.journey-wheel-size {
+  font-size: clamp(1.4rem, 6vw, 104px);
+}
+
+/* Red fluid behind frosted glass (components/ui/Glass.tsx) */
+.red-fluid {
+  background: var(--color-ink);
+}
+.red-fluid span {
+  position: absolute;
+  border-radius: 999px;
+  will-change: transform;
+}
+.red-fluid-a {
+  width: 70%;
+  height: 80%;
+  left: -10%;
+  top: -20%;
+  background: radial-gradient(closest-side, rgb(227 16 27 / 0.85), transparent);
+  animation: fluid-a 14s ease-in-out infinite alternate;
+}
+.red-fluid-b {
+  width: 60%;
+  height: 70%;
+  right: -15%;
+  bottom: -25%;
+  background: radial-gradient(closest-side, rgb(161 11 19 / 0.9), transparent);
+  animation: fluid-b 18s ease-in-out infinite alternate;
+}
+.red-fluid-c {
+  width: 45%;
+  height: 55%;
+  left: 35%;
+  top: 30%;
+  background: radial-gradient(closest-side, rgb(255 60 50 / 0.55), transparent);
+  animation: fluid-c 11s ease-in-out infinite alternate;
+}
+@keyframes fluid-a {
+  to {
+    transform: translate(35%, 30%) scale(1.15);
+  }
+}
+@keyframes fluid-b {
+  to {
+    transform: translate(-40%, -25%) scale(0.9);
+  }
+}
+@keyframes fluid-c {
+  to {
+    transform: translate(-30%, -35%) scale(1.3);
+  }
+}
+.glass {
+  background: rgb(12 11 11 / 0.42);
+  backdrop-filter: blur(28px) saturate(1.4);
+  -webkit-backdrop-filter: blur(28px) saturate(1.4);
+  box-shadow:
+    inset 0 1px 0 0 rgb(255 255 255 / 0.14),
+    inset 0 0 0 1px rgb(255 255 255 / 0.07);
+}
+.glass-light {
+  background: rgb(243 241 236 / 0.12);
+}
+
+/* Faster fluid (price card) */
+.red-fluid-fast .red-fluid-a {
+  animation-duration: 7s;
+}
+.red-fluid-fast .red-fluid-b {
+  animation-duration: 9s;
+}
+.red-fluid-fast .red-fluid-c {
+  animation-duration: 5.5s;
+}
+
+/* VSL progress bar */
+.vsl-range {
+  appearance: none;
+  background: linear-gradient(to right, var(--color-signal) var(--p, 0%), rgb(243 241 236 / 0.25) var(--p, 0%));
+  border-radius: 999px;
+}
+.vsl-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--color-paper);
+}
+.vsl-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-paper);
+}
+
+@layer components {
+  .section-pad {
+    padding-block: var(--section-y);
+    padding-inline: var(--gutter);
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--text-label);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  /* Light reading sections */
+  .on-paper {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    color-scheme: light;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
