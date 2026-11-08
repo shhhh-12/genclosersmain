@@ -50,4 +50,5 @@ export const home = {
 
   // UI copy
   coursesHeading: "Courses",
+  seeCourse: "See the course", // UI copy: quiet link in the closing band
 };

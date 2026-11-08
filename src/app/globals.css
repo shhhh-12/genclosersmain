@@ -122,9 +122,14 @@ html[data-intro="done"] #gc-intro {
 html[data-intro="play"] body {
   overflow: hidden;
 }
-/* Safety net: if scripts never run, the intro hides itself after 12s. */
+/* Home: the header logo waits at the top while the hero shows the big one (components/home/HeaderFlyer.tsx) */
+html[data-hero="live"] :is([data-header-mark], [data-header-text]) {
+  opacity: 0;
+}
+
+/* Safety net: if scripts never run, the intro hides itself after 18s. */
 #gc-intro {
-  animation: intro-failsafe 0s linear 12s forwards;
+  animation: intro-failsafe 0s linear 18s forwards;
 }
 @keyframes intro-failsafe {
   to {
@@ -161,6 +166,64 @@ html[data-intro="play"] body {
 .wheel-word:not(.is-solo) {
   opacity: calc(var(--o, 0) * var(--self, 1) * var(--others, 1));
 }
+/* Intro word sketches (components/wheel/WordSketch.tsx). Off = hidden instantly, on = draw in. */
+.wheel-sketch {
+  position: absolute;
+  left: calc(100% + 0.2em);
+  top: calc(50% + var(--cap-off, 0px));
+  height: 0.52em;
+  width: 1.04em;
+  overflow: visible;
+  color: #ff0000;
+  opacity: 0;
+  transform: translateY(-50%);
+  transition: opacity 120ms linear;
+}
+.wheel-sketch .d {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+.wheel-sketch .pop,
+.wheel-sketch .drop,
+.wheel-sketch .ring,
+.wheel-sketch .tilt-l,
+.wheel-sketch .tilt-r,
+.wheel-sketch .shut-l,
+.wheel-sketch .shut-r {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.wheel-sketch .pop { transform: scale(0); }
+.wheel-sketch .drop { transform: translateY(-12px); opacity: 0; }
+.is-on > .wheel-sketch .drop {
+  transform: none;
+  opacity: 1;
+  transition: transform 300ms var(--ease-inout) 300ms, opacity 120ms linear 300ms;
+}
+.wheel-sketch .ring { transform: scale(1.5); }
+.wheel-sketch .tilt-l { transform-origin: right center; transform: rotate(-16deg); }
+.wheel-sketch .tilt-r { transform-origin: left center; transform: rotate(16deg); }
+.is-on > .wheel-sketch {
+  opacity: 1;
+  transition-duration: 150ms;
+}
+.is-on > .wheel-sketch .d {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 450ms var(--ease-primary);
+}
+.is-on > .wheel-sketch :is(.ring, .tilt-l, .tilt-r) {
+  transform: none;
+  transition: transform 450ms var(--ease-primary), stroke-dashoffset 450ms var(--ease-primary);
+}
+/* Close: the brackets draw apart, then snap shut */
+.is-on > .wheel-sketch :is(.shut-l, .shut-r) { transition: stroke-dashoffset 450ms var(--ease-primary), transform 200ms var(--ease-cut) 320ms; }
+.is-on > .wheel-sketch .shut-l { transform: translateX(6px); }
+.is-on > .wheel-sketch .shut-r { transform: translateX(-6px); }
+.is-on > .wheel-sketch .pop {
+  transform: scale(1);
+  transition: transform 200ms var(--ease-primary) 280ms;
+}
+
 .countdown-big {
   font-size: clamp(3rem, 1rem + 7vw, 8.5rem);
 }

@@ -20,7 +20,7 @@ export function UrgencyStrip({ text, tone = "dark" }: { text: string; tone?: "da
 /** Repeated CTA block: urgency strip, then price and button. */
 export function CtaRow({ course, tone = "dark" }: { course: Course; tone?: "dark" | "light" }) {
   return (
-    <div className={`mx-auto flex max-w-(--container-page) flex-col gap-6 border-t pt-8 md:flex-row md:items-end md:justify-between ${tone === "dark" ? "border-ink-line" : "border-paper-line"}`}>
+    <div data-cta className={`mx-auto flex max-w-(--container-page) flex-col gap-6 border-t pt-8 md:flex-row md:items-end md:justify-between ${tone === "dark" ? "border-ink-line" : "border-paper-line"}`}>
       <div className="max-w-md">
         <SeatRow label={site.ui.seatsLabel} left={course.seatCounter?.left} className="mb-5" />
         <UrgencyStrip text={course.urgency} tone={tone} />

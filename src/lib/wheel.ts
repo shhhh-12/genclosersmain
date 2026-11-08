@@ -19,6 +19,8 @@ export const WHEEL = {
   fps: 60,
   beatFrames: 45,
   moveFrames: 30,
+  /** Home intro + hero: a longer hold (30 move + 38 hold) so each word's sketch can be read. */
+  sketchBeatFrames: 68,
   /** Blur per slot away from the centre (px at the reference size), capped at 6 slots. */
   blurPerSlotPx: 5,
   /** The word drawn in red. */
@@ -73,9 +75,9 @@ export function kickEm(f: number) {
 }
 
 /** Where the wheel is `frame` frames after it started on word `start`. */
-export function beatState(frame: number, start: number) {
-  const b = Math.floor(frame / WHEEL.beatFrames);
-  const t = frame - b * WHEEL.beatFrames;
+export function beatState(frame: number, start: number, beat: number = WHEEL.beatFrames) {
+  const b = Math.floor(frame / beat);
+  const t = frame - b * beat;
   const e = wheelEase(Math.min(1, t / WHEEL.moveFrames));
   return {
     pos: start + b + e,

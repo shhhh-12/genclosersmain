@@ -3,7 +3,6 @@ import { ScrollRead } from "@/components/motion/ScrollRead";
 import { VslPlayer } from "@/components/media/VslPlayer";
 import { LoopBand } from "@/components/media/LoopVideo";
 import { AccordionItem } from "@/components/ui/Accordion";
-import { ButtonLink } from "@/components/ui/Button";
 import { Arrow } from "@/components/ui/Icons";
 import { Price } from "@/components/ui/Price";
 import { Txt } from "@/components/ui/Text";
@@ -88,14 +87,9 @@ export function CountdownBand({ course }: { course: Course }) {
       <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(50%_70%_at_15%_50%,rgb(227_16_27/0.14),transparent_70%)]" />
       <div className="relative mx-auto max-w-(--container-page)">
         <Countdown startsAt={course.startsAt} label={b.label} dateLabel={b.date} />
-        <div className="mt-12 grid gap-8 border-t border-ink-line pt-8 md:grid-cols-3 md:items-end">
+        <div className="mt-12 grid gap-8 border-t border-ink-line pt-8 md:grid-cols-2 md:items-end">
           <SeatRow label={site.ui.seatsLabel} />
           <UrgencyStrip text={course.urgency} />
-          <div className="md:justify-self-end">
-            <ButtonLink href="#apply" size="lg">
-              {course.ctaLabel}
-            </ButtonLink>
-          </div>
         </div>
       </div>
     </section>
@@ -172,12 +166,6 @@ export function WhatYouGet({ course }: { course: Course }) {
                   </div>
                 ))}
               </dl>
-              <div className="mt-8 border-t border-paper/15 pt-6">
-                <UrgencyStrip text={course.urgency} />
-                <ButtonLink href="#apply" size="lg" className="mt-6 w-full bg-paper! text-ink! hover:bg-signal! hover:text-signal-ink!">
-                  {course.ctaLabel}
-                </ButtonLink>
-              </div>
             </div>
           </GlassPanel>
         </aside>

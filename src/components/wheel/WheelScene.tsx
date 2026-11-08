@@ -1,6 +1,7 @@
 import type { Ref, ReactNode, CSSProperties } from "react";
 import { LogoMark } from "@/components/brand/LogoMark";
 import { WHEEL } from "@/lib/wheel";
+import { WordSketch } from "./WordSketch";
 
 /**
  * Markup for the flat spoke wheel (see lib/wheel.ts). Pure layout; intro, hero and journey animate it.
@@ -16,6 +17,7 @@ export function WheelScene({
   anchorClassName = "left-[calc(var(--gutter)+1.1em)] sm:left-[27.9vw]",
   highlight = "Sales",
   fade = false,
+  sketches = false,
   children,
 }: {
   words: readonly string[];
@@ -28,6 +30,8 @@ export function WheelScene({
   highlight?: string;
   /** Fade the top and bottom edges into the background. */
   fade?: boolean;
+  /** Small line drawings after each word, shown while the word is lined up (intro only). */
+  sketches?: boolean;
   /** Extra layers placed at the anchor (e.g. the hero brand). */
   children?: ReactNode;
 }) {
@@ -58,6 +62,7 @@ export function WheelScene({
               style={{ ...wordStyle, color: w === highlight ? WHEEL.redHex : "#fff" }}
             >
               {w}
+              {sketches && <WordSketch word={w} />}
             </span>
           ))}
         </div>

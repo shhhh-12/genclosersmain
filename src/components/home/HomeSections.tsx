@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ButtonLink } from "@/components/ui/Button";
 import { Arrow } from "@/components/ui/Icons";
 import { Price } from "@/components/ui/Price";
 import { GlassPanel } from "@/components/ui/Glass";
@@ -7,14 +6,13 @@ import { SeatRow } from "@/components/ui/Seats";
 import { Reveal } from "@/components/motion/Reveal";
 import { ScrollRead } from "@/components/motion/ScrollRead";
 import { HeroWheel } from "./HeroWheel";
-import { UrgencyStrip } from "@/components/course/Cta";
 import { Countdown } from "@/components/course/Countdown";
 import { batchFact } from "@/components/course/CourseSections";
 import { home, introWords } from "@/content/home";
 import { site } from "@/content/site";
 import type { Course } from "@/content/types";
 
-export function HomeHero({ course }: { course: Course }) {
+export function HomeHero() {
   return (
     <HeroWheel words={introWords}>
       <div className="absolute inset-x-0 bottom-0 z-10 px-(--gutter) pb-8">
@@ -23,9 +21,6 @@ export function HomeHero({ course }: { course: Course }) {
             <span className="h-px w-8 bg-signal" />
             {home.hero.eyebrow}
           </p>
-          <ButtonLink href={`/courses/${course.slug}`} size="lg">
-            {course.name}
-          </ButtonLink>
         </div>
       </div>
     </HeroWheel>
@@ -174,11 +169,16 @@ export function FinalBand({ course }: { course: Course }) {
         </div>
         <div className="mt-12 grid gap-8 md:grid-cols-2 md:items-end">
           <SeatRow label={site.ui.seatsLabel} />
-          <div className="max-w-xl">
-            <UrgencyStrip text={course.urgency} />
-            <ButtonLink href={`/courses/${course.slug}#apply`} size="lg" className="mt-6">
-              {course.ctaLabel}
-            </ButtonLink>
+          <div className="md:justify-self-end">
+            <Link
+              href={`/courses/${course.slug}`}
+              className="group inline-flex items-center gap-3 border-b border-ink-line pb-2 font-display text-h3 font-semibold tracking-[-0.02em] transition-colors duration-450 hover:border-signal hover:text-signal"
+            >
+              {home.seeCourse}
+              <span className="text-signal transition-transform duration-450 ease-primary group-hover:translate-x-1">
+                <Arrow />
+              </span>
+            </Link>
           </div>
         </div>
       </div>

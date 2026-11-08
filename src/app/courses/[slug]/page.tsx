@@ -4,7 +4,8 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { CtaRow } from "@/components/course/Cta";
 import { JourneyPinned } from "@/components/course/JourneyPinned";
-import { MobileCtaBar } from "@/components/course/MobileCtaBar";
+import { CtaBar } from "@/components/course/CtaBar";
+import { site } from "@/content/site";
 import {
   CourseHero,
   CountdownBand,
@@ -46,7 +47,7 @@ export default async function CoursePage({ params }: PageProps<"/courses/[slug]"
 
   return (
     <>
-      <SiteHeader variant="landing" price={course.price.amount} ctaLabel={course.ctaLabel} ctaHref="#apply" />
+      <SiteHeader variant="landing" />
       <main>
         <CourseHero course={course} />
         <CountdownBand course={course} />
@@ -67,7 +68,7 @@ export default async function CoursePage({ params }: PageProps<"/courses/[slug]"
         <Apply course={course} />
       </main>
       <SiteFooter minimal />
-      <MobileCtaBar price={course.price.amount} label={course.ctaLabel} />
+      <CtaBar price={course.price.amount} label={course.ctaLabel} seats={site.ui.seatsLabel} />
     </>
   );
 }

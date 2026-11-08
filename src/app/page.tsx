@@ -1,5 +1,6 @@
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { HeaderFlyer } from "@/components/home/HeaderFlyer";
 import { IntroTear } from "@/components/home/IntroTear";
 import { HomeHero, HomeAbout, Beliefs, Audience, CoursesBlock, FinalBand } from "@/components/home/HomeSections";
 import { LoopBand } from "@/components/media/LoopVideo";
@@ -14,9 +15,10 @@ export default function HomePage() {
       <script dangerouslySetInnerHTML={{ __html: introGateScript }} />
       <IntroTear words={introShortWords} stageId="home-stage" />
       <SiteHeader />
+      <HeaderFlyer />
       <div id="home-stage">
         <main>
-          <HomeHero course={primary} />
+          <HomeHero />
           <HomeAbout />
           <Beliefs />
           <Audience />

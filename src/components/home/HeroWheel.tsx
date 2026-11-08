@@ -49,8 +49,13 @@ export function HeroWheel({ words, children }: { words: readonly string[]; child
     const clock = { f: 0 };
 
     const render = () => {
-      const b = beatState(clock.f, sales);
+      const b = beatState(clock.f, sales, WHEEL.sketchBeatFrames);
       renderWheel(wordEls, b.pos, n, { kick: b.wordKick, kickIndex: b.arriving });
+      // A word's sketch shows only while that word is lined up with the mark
+      for (const w of wordEls) {
+        const d = (((Number(w.dataset.i) - b.pos) % n) + n) % n;
+        w.classList.toggle("is-on", Math.min(d, n - d) < 0.04);
+      }
       if (arrowInner) arrowInner.style.transform = `translateX(${b.arrowKick}em)`;
     };
     // The lockup stays in the wheel's position (mark in the arrow slot, letters where "Sales"
@@ -102,7 +107,7 @@ export function HeroWheel({ words, children }: { words: readonly string[]; child
       return () => window.removeEventListener("resize", onResize);
     }
 
-    const frames = n * WHEEL.beatFrames;
+    const frames = n * WHEEL.sketchBeatFrames;
     const tl = gsap.timeline({ repeat: -1, paused: true });
 
     // Re-measure at the start of every loop (fonts / layout may have settled since)
@@ -149,11 +154,24 @@ export function HeroWheel({ words, children }: { words: readonly string[]; child
 
     if (process.env.NODE_ENV !== "production") (window as unknown as { __heroTl: gsap.core.Timeline }).__heroTl = tl;
 
-    // Wait for the intro to finish, and only run while on screen
+    // Wait for the intro to finish, only run while on screen, and stop while the mark has been
+    // handed to the header (HeaderFlyer sets data-hero: "docked" | "returning" | "live").
+    // On the way back the hero is reset to the lockup first, so the mark flies back to the right spot.
     let onScreen = true;
+    let lastHero = document.documentElement.dataset.hero;
     const sync = () => {
-      const introDone = document.documentElement.dataset.intro !== "play";
-      if (introDone && onScreen) tl.play();
+      const d = document.documentElement.dataset;
+      if (d.hero !== lastHero) {
+        if (d.hero === "returning") {
+          tl.pause(0);
+          startState();
+          measure();
+        }
+        lastHero = d.hero;
+      }
+      const introDone = d.intro !== "play";
+      const live = d.hero !== "docked" && d.hero !== "returning";
+      if (introDone && onScreen && live) tl.play();
       else tl.pause();
     };
     const io = new IntersectionObserver(([e]) => {
@@ -162,7 +180,7 @@ export function HeroWheel({ words, children }: { words: readonly string[]; child
     });
     io.observe(frame);
     const mo = new MutationObserver(sync);
-    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-intro"] });
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-intro", "data-hero"] });
     sync();
 
     return () => {
@@ -175,8 +193,8 @@ export function HeroWheel({ words, children }: { words: readonly string[]; child
 
   return (
     <section ref={section} className="relative isolate h-[100svh] min-h-[34rem] overflow-hidden bg-black">
-      <div aria-hidden className="wheel-size absolute inset-0 leading-none">
-        <WheelScene words={words} sceneRef={scene} arrowRef={arrow}>
+      <div aria-hidden data-hero-art className="wheel-size absolute inset-0 leading-none">
+        <WheelScene sketches words={words} sceneRef={scene} arrowRef={arrow}>
           <BrandLockup lockRef={lock} />
         </WheelScene>
         <SliceStage stageRef={stage}>

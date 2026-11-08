@@ -4,7 +4,9 @@
  * Home intro: the flat spoke wheel with 6 words opens on red "Sales", turns one full circle
  * (Prospect, Connect, Pitch, Negotiate, Close) and lands on "Sales" again. Then the arrow
  * shoots across the screen and slices it horizontally; the top half lifts away, the bottom half
- * drops, a beat of black, then the hero (logo + GENCLOSERS, in the same spot as "Sales") zooms in. One slice per page load.
+ * drops, and the cut opens onto paper: a thin strip widens until the screen is paper, the lockup lands on it
+ * (ink letters, red mark), one beat, then the paper closes back to the cut line and the ink hero is underneath.
+ * One ink to paper to ink flip per page load.
  *
  * - INTRO_EVERY_LOAD (lib/intro.ts) = play on every load while testing; otherwise once per visit.
  * - Any scroll, swipe, key or click skips straight to the slice.
@@ -13,6 +15,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { LogoMark } from "@/components/brand/LogoMark";
+import { LockupInner } from "@/components/wheel/BrandLockup";
 import { gsap } from "gsap";
 import { WheelScene } from "@/components/wheel/WheelScene";
 import { lockScroll } from "@/lib/scroll";
@@ -29,6 +32,8 @@ export function IntroTear({ words, stageId }: { words: readonly string[]; stageI
   const bottom = useRef<HTMLDivElement>(null);
   const slit = useRef<HTMLDivElement>(null);
   const blade = useRef<HTMLDivElement>(null);
+  const paper = useRef<HTMLDivElement>(null);
+  const paperLock = useRef<HTMLDivElement>(null);
   const arrows = useRef<(HTMLSpanElement | null)[]>([]);
   const scenes = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -54,8 +59,13 @@ export function IntroTear({ words, stageId }: { words: readonly string[]; stageI
     const arrowInner = arrows.current.map((a) => a?.firstElementChild as HTMLElement | null);
     const clock = { f: 0 };
     const render = () => {
-      const b = beatState(clock.f, sales);
+      const b = beatState(clock.f, sales, WHEEL.sketchBeatFrames);
       renderWheel(wordEls, b.pos, n, { kick: b.wordKick, kickIndex: b.arriving });
+      // A word's sketch shows only while that word is lined up with the mark
+      for (const w of wordEls) {
+        const d = (((Number(w.dataset.i) - b.pos) % n) + n) % n;
+        w.classList.toggle("is-on", Math.min(d, n - d) < 0.04);
+      }
       arrowInner.forEach((a) => a && (a.style.transform = `translateX(${b.arrowKick}em)`));
     };
     const align = () =>
@@ -76,9 +86,24 @@ export function IntroTear({ words, stageId }: { words: readonly string[]; stageI
     const r = blade.current?.firstElementChild?.getBoundingClientRect(); // the visible arrow
     const s = stage?.getBoundingClientRect();
     const slot = r && s ? `${r.left + r.width / 2 - s.left}px ${r.top + r.height / 2 - s.top}px` : "30% 50vh";
-    if (stage) gsap.set(stage, { scale: 0.92, opacity: 0, transformOrigin: slot });
+    // The hero sits hidden behind the paper until the paper closes (it is the ink side of the flip)
+    if (stage) gsap.set(stage, { opacity: 0 });
+    gsap.set(paper.current, { clipPath: "inset(50% 0% 50% 0%)" });
+    gsap.set(paperLock.current, { opacity: 0, scale: 0.92, transformOrigin: slot });
 
-    const frames = n * WHEEL.beatFrames; // one full turn: Sales back to Sales
+    // Put the paper lockup exactly where the hero's lockup is (same px, same letter offset)
+    const placePaperLockup = () => {
+      const st = stage?.querySelector<HTMLElement>(".slice-stage");
+      const lock = paperLock.current;
+      if (!st || !lock) return;
+      lock.style.left = st.style.getPropertyValue("--sx") || "0px";
+      lock.style.top = st.style.getPropertyValue("--sy") || "0px";
+      const heroText = st.querySelector<HTMLElement>(".brand-text");
+      const myText = lock.querySelector<HTMLElement>(".brand-text");
+      if (heroText && myText) myText.style.marginLeft = heroText.style.marginLeft;
+    };
+
+    const frames = n * WHEEL.sketchBeatFrames; // one full turn: Sales back to Sales
     const tl = gsap.timeline({ delay: 0.8 }); // a moment on "Sales" first
     tl.to(clock, { f: frames, duration: frames / WHEEL.fps, ease: "none", onUpdate: render });
 
@@ -94,8 +119,15 @@ export function IntroTear({ words, stageId }: { words: readonly string[]; stageI
     tl.to(top.current, { yPercent: -58, rotateX: 34, z: -140, duration: 1.2, ease: "power3.inOut" }, "peel");
     tl.to(bottom.current, { yPercent: 58, rotateX: -34, z: -140, duration: 1.2, ease: "power3.inOut" }, "peel");
     tl.to([top.current, bottom.current], { opacity: 0, duration: 0.45, ease: "power1.in" }, "peel+=0.8");
-    // The halves are gone at peel+1.25; a beat of pure black, then the lockup zooms in
-    if (stage) tl.to(stage, { scale: 1, opacity: 1, duration: 0.9, ease: "power3.out" }, "peel+=1.6");
+    // Paper inversion: the cut opens onto a thin strip of paper that widens (it leads the halves, so no
+    // black gap shows) until the whole screen is paper. The lockup lands on it: ink letters, red mark.
+    tl.to(paper.current, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.95, ease: "power3.inOut" }, "peel");
+    tl.call(placePaperLockup, [], "peel");
+    tl.to(paperLock.current, { opacity: 1, scale: 1, duration: 0.9, ease: "power3.out" }, "peel+=0.55");
+    // One beat on paper, then it closes back to the cut line, and the ink hero (same lockup, same spot) is underneath
+    tl.addLabel("ink", "peel+=2.1");
+    if (stage) tl.set(stage, { opacity: 1 }, "ink");
+    tl.to(paper.current, { clipPath: "inset(50% 0% 50% 0%)", duration: 0.8, ease: "power3.inOut" }, "ink");
 
     if (process.env.NODE_ENV !== "production") (window as unknown as { __intro: unknown }).__intro = { clock, render, tl };
 
@@ -147,12 +179,21 @@ export function IntroTear({ words, stageId }: { words: readonly string[]; stageI
 
   return (
     <div id="gc-intro" ref={root} className="fixed inset-0 z-[60] cursor-pointer select-none [perspective:1400px]">
+      {/* Paper side of the flip: a strip at the cut line that widens to the full screen */}
+      <div ref={paper} aria-hidden className="wheel-size absolute inset-0 bg-paper leading-none [clip-path:inset(50%_0_50%_0)]">
+        <div
+          ref={paperLock}
+          className="absolute flex items-center font-display leading-none font-bold text-ink opacity-0 [&_.brand-logo]:text-signal"
+        >
+          <LockupInner />
+        </div>
+      </div>
       <div aria-hidden className="wheel-size absolute inset-0 leading-none">
         <div ref={top} className="absolute inset-0 bg-black [clip-path:inset(0_0_50%_0)] [transform-origin:50%_0%] will-change-transform">
-          <WheelScene words={words} sceneRef={(e) => void (scenes.current[0] = e)} arrowRef={(e) => void (arrows.current[0] = e)} />
+          <WheelScene sketches words={words} sceneRef={(e) => void (scenes.current[0] = e)} arrowRef={(e) => void (arrows.current[0] = e)} />
         </div>
         <div ref={bottom} className="absolute inset-0 bg-black [clip-path:inset(50%_0_0_0)] [transform-origin:50%_100%] will-change-transform">
-          <WheelScene words={words} sceneRef={(e) => void (scenes.current[1] = e)} arrowRef={(e) => void (arrows.current[1] = e)} />
+          <WheelScene sketches words={words} sceneRef={(e) => void (scenes.current[1] = e)} arrowRef={(e) => void (arrows.current[1] = e)} />
         </div>
 
         {/* The slit the arrow leaves behind: white-hot core, red glow */}
