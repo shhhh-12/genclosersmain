@@ -66,7 +66,7 @@ export default async function ApplicationsPage({ searchParams }: PageProps<"/adm
                   </td>
                   <td className="px-4 py-3">{r.email}</td>
                   <td className="px-4 py-3 text-mute-dark">{r.occupation}</td>
-                  <td className="max-w-[14rem] px-4 py-3 text-mute-dark">{r.readiness}</td>
+                  <td className="max-w-[14rem] px-4 py-3 text-mute-dark">{r.readiness || (r.email ? "" : "Step 1 only")}</td>
                   <td className="px-4 py-3 text-mute-dark">{r.utm_source || "-"}</td>
                   <td className="px-4 py-3">
                     <Pill tone={tone[r.status as Status]}>{panel.admin.statuses[r.status as Status]}</Pill>

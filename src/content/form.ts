@@ -10,11 +10,18 @@ export const applicationForm = {
   // Owner 2026-11-10: the big line beside the form, the salesman leans on it (line 2 in red)
   cheer: ["You can", "do it."],
   submitLabel: "Reserve My Seat",
+  // Owner 2026-11-10: two steps. Step 1 (name + WhatsApp) is saved at once, so a half-finished form is
+  // still a lead. Email moved to step 2: paid students get their login by email, so it stays required.
+  steps: [["fullName", "whatsapp"], ["email", "occupation", "goal", "experience", "seriousness", "readiness"]],
+  stepLabel: (n: number) => `Step ${n} of 2`, // UI copy
+  nextLabel: "Continue", // UI copy
+  backLabel: "Back", // UI copy
+  step2Intro: "Almost there. A few quick questions so we call you with the right plan.", // UI copy
   sendingLabel: "Sending…", // UI copy
   fields: [
     { id: "fullName", type: "text", label: "Full Name", placeholder: "Enter your full name", autoComplete: "name" },
     { id: "whatsapp", type: "tel", label: "Phone Number (WhatsApp)", placeholder: "Enter your WhatsApp number", autoComplete: "tel" },
-    { id: "email", type: "email", label: "Email Address", placeholder: "Enter your email", autoComplete: "email" },
+    { id: "email", type: "email", label: "Email Address (for your course login)", placeholder: "Enter your email", autoComplete: "email" },
     {
       id: "occupation", type: "choice", label: "Occupation",
       options: ["Student", "Business Owner", "Aspiring Entrepreneur", "Freelancer", "Salesperson", "Working Professional", "Other"],
@@ -46,13 +53,15 @@ export const applicationForm = {
         "Just exploring. I'm still figuring out if sales is right for me.",
       ],
     },
-    {
-      id: "decisionMaker", type: "choice", label: "Are you the main decision maker for joining this program?",
-      options: ["Yes, I can decide on my own.", "No, I need to discuss it with my parents, spouse or family first."],
-    },
+    // Owner 2026-11-10: "Are you the main decision maker?" merged into this question (fewer questions).
     {
       id: "readiness", type: "choice", label: "The program fee is ₹20,000. Are you ready to invest in yourself right now?",
-      options: ["Yes, I'm ready to join this batch.", "I need some time to arrange it.", "Not right now."],
+      options: [
+        "Yes, I'm ready to join this batch, and I can decide on my own.",
+        "Yes, but I need to discuss it with my parents, spouse or family first.",
+        "I need some time to arrange it.",
+        "Not right now.",
+      ],
     },
   ] satisfies Field[],
 

@@ -29,6 +29,9 @@ export const site = {
     stepsLabel: "Steps", // the "3 / 7" counter on the journey
     certified: "GenClosers Certified", // the certificate's name (core content: certificate)
     // UI copy: the sample certificate the journey sheet flips over to (course page)
+    // UI copy: the curriculum shows a summary first (owner 2026-11-10)
+    seeAllModules: (n: number) => `See all ${n} modules`,
+    showSummary: "Show the summary",
     certificate: {
       title: "Certificate",
       subtitle: "of completion",

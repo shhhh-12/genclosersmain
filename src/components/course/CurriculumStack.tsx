@@ -11,6 +11,7 @@ import { useEffect, useRef, useState } from "react";
 import { AccordionItem } from "@/components/ui/Accordion";
 import { Arrow } from "@/components/ui/Icons";
 import { ScrollRead } from "@/components/motion/ScrollRead";
+import { site } from "@/content/site";
 import type { Course } from "@/content/types";
 
 const n2 = (i: number) => String(i).padStart(2, "0");
@@ -21,6 +22,8 @@ export function CurriculumStack({ course }: { course: Course }) {
   const ref = useRef<HTMLDivElement>(null);
   const [seen, setSeen] = useState(0);
   const [label, setLabel] = useState(c.groups[0]?.part ?? "");
+  // summary first: each card lists its module titles; the button opens the full stack with details
+  const [all, setAll] = useState(false);
 
   useEffect(() => {
     const root = ref.current;
@@ -69,7 +72,7 @@ export function CurriculumStack({ course }: { course: Course }) {
       ro.disconnect();
       cancelAnimationFrame(raf);
     };
-  }, [c.groups]);
+  }, [c.groups, all]);
 
   // running module position across groups (1-based), precomputed
   const firstIdx = c.groups.map((_, gi) => c.groups.slice(0, gi).reduce((n, g) => n + g.modules.length, 0));
@@ -108,6 +111,17 @@ export function CurriculumStack({ course }: { course: Course }) {
                   <p className="font-mono text-small text-mute-light">{n2(gi + 1)}</p>
                 </div>
                 {g.section && <p className="mt-5 font-display text-[1.125rem] font-semibold text-signal-deep">{g.section}</p>}
+                {!all && (
+                  <ul className="mt-4 space-y-2.5">
+                    {g.modules.map((m, mi) => (
+                      <li key={m.number} data-mod={firstIdx[gi] + mi + 1} data-part={g.part} className="flex items-baseline gap-4">
+                        <span className="w-10 shrink-0 font-mono text-small text-mute-light">M{n2(m.number)}</span>
+                        <span className="font-display text-[1.0625rem] font-medium tracking-[-0.01em] sm:text-[1.1875rem]">{m.title}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {all && (
                 <div className={g.section ? "mt-1" : "mt-2"}>
                   {g.modules.map((m, mi) => {
                     const idx = firstIdx[gi] + mi + 1;
@@ -136,9 +150,26 @@ export function CurriculumStack({ course }: { course: Course }) {
                     );
                   })}
                 </div>
+                )}
               </article>
             );
           })}
+          <div className="relative z-10 mt-10 flex justify-center">
+            <button
+              type="button"
+              onClick={() => {
+                setAll((v) => !v);
+                if (all) ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+              aria-expanded={all}
+              className="group inline-flex items-center gap-3 rounded-pill border-2 border-ink bg-white px-6 py-3 font-display font-semibold shadow-[4px_5px_0_0_var(--color-ink)] transition-transform duration-200 hover:-translate-y-0.5"
+            >
+              {all ? site.ui.showSummary : site.ui.seeAllModules(total)}
+              <span className={`text-signal transition-transform duration-450 ease-primary ${all ? "-rotate-90" : "rotate-90"}`}>
+                <Arrow />
+              </span>
+            </button>
+          </div>
           {/* room for the last card to settle on the pile */}
           <div className="h-[20vh] motion-reduce:hidden" aria-hidden />
         </div>

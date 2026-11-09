@@ -52,6 +52,8 @@ export function ApplyForm({ courseName }: { courseName: string }) {
   const [values, setValues] = useState<Values>({});
   const [errors, setErrors] = useState<Record<string, string | null>>({});
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [step, setStep] = useState<1 | 2>(1);
+  const leadId = useRef<string | null>(null);
   const utm = useRef<Values>({});
   const formRef = useRef<HTMLFormElement>(null);
   const reduce = useReducedMotion();
@@ -65,28 +67,56 @@ export function ApplyForm({ courseName }: { courseName: string }) {
     if (errors[id]) setErrors((e) => ({ ...e, [id]: null }));
   };
 
+  const stepFields = f.fields.filter((x) => f.steps[step - 1].includes(x.id));
+
+  const post = (extra: { step: number; id?: string | null }, signal?: AbortSignal) => {
+    const honeypot = (formRef.current?.elements.namedItem("company") as HTMLInputElement | null)?.value ?? "";
+    return fetch(ENDPOINT, {
+      method: "POST",
+      signal,
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ ...values, ...utm.current, page: window.location.pathname, company: honeypot, ...extra }),
+    });
+  };
+
+  const toTop = () => {
+    const el = formRef.current;
+    if (!el) return;
+    const y = el.getBoundingClientRect().top + window.scrollY - 120;
+    window.scrollTo({ top: y, behavior: reduce ? "auto" : "smooth" });
+    el.querySelector<HTMLElement>("input:not([tabindex='-1'])")?.focus({ preventScroll: true });
+  };
+
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const next: Record<string, string | null> = {};
-    for (const field of f.fields) next[field.id] = validate(field, values[field.id] ?? "");
+    for (const field of stepFields) next[field.id] = validate(field, values[field.id] ?? "");
     setErrors(next);
-    const firstBad = f.fields.find((x) => next[x.id]);
+    const firstBad = stepFields.find((x) => next[x.id]);
     if (firstBad) {
       formRef.current?.querySelector<HTMLElement>(`[name="${firstBad.id}"]`)?.focus();
       return;
     }
-    if (!ENDPOINT) {
-      setStatus("error");
+
+    // Step 1: save the lead (name + WhatsApp) and move on. Never block the visitor on this.
+    if (step === 1) {
+      setStatus("sending");
+      try {
+        const ctl = new AbortController();
+        const t = window.setTimeout(() => ctl.abort(), 5000);
+        const res = await post({ step: 1 }, ctl.signal).finally(() => window.clearTimeout(t));
+        const data = (await res.json().catch(() => ({}))) as { id?: string | null };
+        if (data.id) leadId.current = data.id;
+      } catch {}
+      setStatus("idle");
+      setStep(2);
+      requestAnimationFrame(toTop);
       return;
     }
+
     setStatus("sending");
-    const honeypot = (formRef.current?.elements.namedItem("company") as HTMLInputElement | null)?.value ?? "";
     try {
-      const res = await fetch(ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ ...values, ...utm.current, page: window.location.pathname, company: honeypot }),
-      });
+      const res = await post({ step: 2, id: leadId.current });
       const data = (await res.json().catch(() => ({}))) as { ok?: boolean };
       setStatus(data.ok ? "sent" : "error");
     } catch {
@@ -123,7 +153,24 @@ export function ApplyForm({ courseName }: { courseName: string }) {
         </label>
       </div>
 
-      {f.fields.map((field, idx) => {
+      {/* which step, and how far */}
+      <div>
+        <div className="flex items-center justify-between gap-4">
+          <p className="eyebrow text-signal">{f.stepLabel(step)}</p>
+          {step === 2 && (
+            <button type="button" onClick={() => setStep(1)} className="eyebrow text-mute-dark transition-colors hover:text-paper">
+              {f.backLabel}
+            </button>
+          )}
+        </div>
+        <div className="mt-3 h-[3px] w-full bg-ink-line">
+          <div className="h-full origin-left bg-signal transition-transform duration-450 ease-primary" style={{ transform: `scaleX(${step / 2})` }} />
+        </div>
+        {step === 2 && <p className="mt-5 text-lead text-mute-dark">{f.step2Intro}</p>}
+      </div>
+
+      {stepFields.map((field) => {
+        const idx = f.fields.indexOf(field);
         const err = errors[field.id];
         const errId = `${field.id}-err`;
         const label = (
@@ -201,7 +248,7 @@ export function ApplyForm({ courseName }: { courseName: string }) {
 
       <div className="space-y-4 border-t border-ink-line pt-8">
         <button type="submit" disabled={status === "sending"} className={`${buttonClasses("signal", "lg")} w-full disabled:opacity-60 sm:w-auto`}>
-          {status === "sending" ? f.sendingLabel : f.submitLabel}
+          {status === "sending" ? f.sendingLabel : step === 1 ? f.nextLabel : f.submitLabel}
         </button>
         <div id="form-status" aria-live="polite">
           {status === "error" && (

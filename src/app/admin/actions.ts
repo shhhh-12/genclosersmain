@@ -39,6 +39,7 @@ export async function markPaid(id: string, batchId: string) {
   const admin = supabaseAdmin();
   const { data: app, error: e1 } = await admin.from("applications").select("*").eq("id", id).single();
   if (e1 || !app) return { ok: false, error: "Application not found." };
+  if (!app.email) return { ok: false, error: "No email yet (they only finished step 1). Ask for it on WhatsApp first." };
   const { data: batch } = await admin.from("batches").select("*").eq("id", batchId).single();
   if (!batch) return { ok: false, error: "Choose a batch." };
 

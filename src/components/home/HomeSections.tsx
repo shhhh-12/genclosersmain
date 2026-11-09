@@ -9,6 +9,7 @@ import { FriendStory } from "./FriendStory";
 import { BeliefStrike } from "./BeliefStrike";
 import { AudiencePolaroids } from "./AudiencePolaroids";
 import { home } from "@/content/home";
+import { listedCourses } from "@/content/courses";
 import { emphasis } from "@/content/emphasis";
 import { site } from "@/content/site";
 import type { Course } from "@/content/types";
@@ -24,7 +25,7 @@ export function HomeHero() {
       eyebrows={home.story.eyebrows}
       scrollHint={home.story.scrollHint}
       night={home.story.night}
-      about={{ heading: home.hero.heading, heavy: emphasis[home.hero.heading], body: home.hero.body }}
+      about={{ heading: home.hero.heading, heavy: emphasis[home.hero.heading], body: home.hero.body, link: { href: `/courses/${listedCourses[0].slug}`, label: home.seeCourse } }}
     />
   );
 }

@@ -189,7 +189,7 @@ export function JourneySheet({ heading, steps, courseName }: { heading: string; 
   }, [motion]);
 
   return (
-    <section ref={section} className="journey-sheet relative h-[480svh] bg-black max-md:h-[440svh] motion-reduce:h-auto">
+    <section ref={section} className="journey-sheet relative h-[400svh] bg-black max-md:h-[380svh] motion-reduce:h-auto">
       <div className="js-stage sticky top-0 flex h-[100svh] items-center justify-center overflow-hidden px-(--gutter) pt-[88px] pb-4 motion-reduce:static motion-reduce:h-auto motion-reduce:py-(--section-y)">
         <canvas aria-hidden className="js-confetti pointer-events-none absolute inset-0 z-20 size-full motion-reduce:hidden" />
         <div className="js-sheet relative w-full max-w-[66rem] origin-center" style={{ perspective: "2200px" }}>

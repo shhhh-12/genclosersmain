@@ -2,13 +2,11 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { IntroTear } from "@/components/home/IntroTear";
 import { HomeHero, HomeAbout, Beliefs, Audience, CoursesBlock } from "@/components/home/HomeSections";
-import { LoopBand } from "@/components/media/LoopVideo";
 import { introGateScript } from "@/lib/intro";
 import { introShortWords } from "@/content/home";
 import { listedCourses } from "@/content/courses";
 
 export default function HomePage() {
-  const primary = listedCourses[0];
   return (
     <>
       <script dangerouslySetInnerHTML={{ __html: introGateScript }} />
@@ -24,10 +22,10 @@ export default function HomePage() {
             <div className="motion-safe:hidden">
               <HomeAbout />
             </div>
+            {/* the course right after the story (owner 2026-11-10: course card up, loop video removed) */}
+            <CoursesBlock courses={listedCourses} />
             <Beliefs />
             <Audience />
-            <LoopBand media={primary.loopVideo} />
-            <CoursesBlock courses={listedCourses} />
           </div>
         </main>
         <SiteFooter />

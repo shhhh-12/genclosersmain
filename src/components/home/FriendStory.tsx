@@ -19,6 +19,8 @@
  */
 
 import { Fragment, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { Arrow } from "@/components/ui/Icons";
 import { createScrollScene, seg, lerp, clamp01, easeOut, easeInOut } from "@/lib/scrollScene";
 import { LockupInner } from "@/components/wheel/BrandLockup";
 import { useMotionAllowed } from "@/lib/useMotionAllowed";
@@ -266,7 +268,7 @@ export function FriendStory({
   eyebrows: readonly string[];
   scrollHint: { text: string; accent: string };
   night: { toNight: string; toDay: string; label: string };
-  about: { heading: string; heavy?: string; body: string };
+  about: { heading: string; heavy?: string; body: string; link?: { href: string; label: string } };
 }) {
   const section = useRef<HTMLElement>(null);
   const motion = useMotionAllowed();
@@ -924,7 +926,18 @@ export function FriendStory({
               <h2 className="font-display text-h1 font-light tracking-[-0.035em] text-balance text-paper md:col-span-8">
                 <AboutHeading text={about.heading} heavy={about.heavy} />
               </h2>
-              <p className="text-lead text-mute-dark md:col-span-6 md:col-start-7">{about.body}</p>
+              <div className="md:col-span-6 md:col-start-7">
+                <p className="text-lead text-mute-dark">{about.body}</p>
+                {/* a quiet way on for people who enjoyed the story (owner 2026-11-10) */}
+                {about.link && (
+                  <Link href={about.link.href} className="group mt-8 inline-flex items-center gap-3 font-display text-[1.125rem] font-medium text-paper">
+                    <span className="border-b border-paper/30 pb-0.5 transition-colors group-hover:border-signal group-hover:text-signal">{about.link.label}</span>
+                    <span className="text-signal transition-transform duration-450 ease-primary group-hover:translate-x-1">
+                      <Arrow />
+                    </span>
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
 
