@@ -623,6 +623,17 @@ html[data-intro="play"] body {
   fill: #121831;
   opacity: 0.42;
 }
+/* the section and stage behind the room take the under-room tone, so when a phone's address bar
+   hides (the screen grows past 100svh) the strip below the stage matches instead of flashing paper */
+.friend-story,
+.friend-story .fs-stage {
+  background-color: #f3f1ec;
+  transition: background-color 900ms ease-in-out;
+}
+.friend-story.is-night,
+.friend-story.is-night .fs-stage {
+  background-color: #0c0b0b;
+}
 /* one plain tone under the room (the why-chain), matched to the scrim so no band shows */
 .friend-story .cafe-under,
 .friend-story .under-stop {

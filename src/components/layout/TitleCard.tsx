@@ -66,8 +66,8 @@ export function TitleCard() {
     const cut = { x: -0.12 * W };
     tl.to(cut, {
       x: W + mw * 1.2,
-      duration: 0.62,
-      ease: "power4.in",
+      duration: 1.05, // slow enough to see the mark doing the cutting (owner 2026-11-10)
+      ease: "power2.inOut",
       onUpdate: () => {
         gsap.set(blade.current, { x: cut.x });
         gsap.set(slit.current, { scaleX: Math.max(0, Math.min(1, (cut.x + mw * 0.35) / W)) });
