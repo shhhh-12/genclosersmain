@@ -5,8 +5,8 @@
  * (Prospect, Connect, Pitch, Negotiate, Close) and lands on "Sales" again. Then the arrow
  * shoots across the screen and slices it horizontally; the top half lifts away, the bottom half
  * drops, and the cut opens onto paper: a thin strip widens until the screen is paper, the lockup lands on it
- * (ink letters, red mark), one beat, then the paper closes back to the cut line and the ink hero is underneath.
- * One ink to paper to ink flip per page load.
+ * (ink letters, red mark), one beat, then the hero takes over on the same paper card (the story's salesman
+ * pushes it away). One ink to paper flip per page load.
  *
  * - INTRO_EVERY_LOAD (lib/intro.ts) = play on every load while testing; otherwise once per visit.
  * - Any scroll, swipe, key or click skips straight to the slice.
@@ -95,7 +95,17 @@ export function IntroTear({ words, stageId }: { words: readonly string[]; stageI
     const placePaperLockup = () => {
       const st = stage?.querySelector<HTMLElement>(".slice-stage");
       const lock = paperLock.current;
-      if (!st || !lock) return;
+      if (!lock) return;
+      if (!st) {
+        // No hero lockup to match: the mark lands exactly where the intro's mark was, on the cut line
+        if (r) {
+          lock.style.left = `${r.left}px`;
+          lock.style.top = `${r.top + r.height / 2}px`;
+          lock.style.translate = "0 -50%";
+          gsap.set(lock, { transformOrigin: `${r.width / 2}px 50%` });
+        }
+        return;
+      }
       lock.style.left = st.style.getPropertyValue("--sx") || "0px";
       lock.style.top = st.style.getPropertyValue("--sy") || "0px";
       const heroText = st.querySelector<HTMLElement>(".brand-text");
@@ -124,10 +134,11 @@ export function IntroTear({ words, stageId }: { words: readonly string[]; stageI
     tl.to(paper.current, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.95, ease: "power3.inOut" }, "peel");
     tl.call(placePaperLockup, [], "peel");
     tl.to(paperLock.current, { opacity: 1, scale: 1, duration: 0.9, ease: "power3.out" }, "peel+=0.55");
-    // One beat on paper, then it closes back to the cut line, and the ink hero (same lockup, same spot) is underneath
-    tl.addLabel("ink", "peel+=2.1");
+    // One beat on paper, then hand over: the hero underneath starts on the same paper card with the same
+    // lockup in the same spot, and the salesman shoves that card away (owner 2026-11-10: no close to ink)
+    tl.addLabel("ink", "peel+=1.6");
     if (stage) tl.set(stage, { opacity: 1 }, "ink");
-    tl.to(paper.current, { clipPath: "inset(50% 0% 50% 0%)", duration: 0.8, ease: "power3.inOut" }, "ink");
+    tl.set(paper.current, { opacity: 0 }, "ink+=0.05");
 
     if (process.env.NODE_ENV !== "production") (window as unknown as { __intro: unknown }).__intro = { clock, render, tl };
 

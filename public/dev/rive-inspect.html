@@ -1,0 +1,16 @@
+<!doctype html><html><head><meta charset="utf-8"><title>rive inspect</title>
+<style>body{margin:0;background:#f3f1ec;font:12px monospace}canvas{width:800px;height:600px;display:block}</style></head>
+<body><canvas id="c" width="1600" height="1200"></canvas><pre id="o"></pre>
+<script src="https://unpkg.com/@rive-app/canvas@2.31.2/rive.js"></script>
+<script>
+window.__info = null;
+const r = new rive.Rive({ src: "/dev/inspect.riv", canvas: document.getElementById("c"), autoplay: true, stateMachines: undefined,
+  onLoad: () => {
+    const c = r.contents;
+    const info = { artboards: c.artboards.map(a => ({ name: a.name, animations: a.animations, stateMachines: a.stateMachines.map(s => ({ name: s.name, inputs: s.inputs })) })) };
+    window.__info = info; document.getElementById("o").textContent = JSON.stringify(info, null, 1);
+    const sm = info.artboards[0]?.stateMachines[0]?.name;
+    if (sm) { r.stop(); r.play(sm); }
+    r.resizeDrawingSurfaceToCanvas();
+  }, onLoadError: (e) => { window.__info = { error: String(e) }; } });
+</script></body></html>

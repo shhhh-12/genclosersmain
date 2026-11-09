@@ -58,7 +58,9 @@ export function addSlice(
   p: SliceParts,
   at: string,
   travel: () => number,
-  reveal?: { el: HTMLElement | null; from?: number; to?: number }
+  reveal?: { el: HTMLElement | null; from?: number; to?: number },
+  /** When (after the peel starts) and how fast the halves fade. Defaults match the intro. */
+  fade: { at?: number; duration?: number } = {}
 ) {
   tl.fromTo(p.blade, { opacity: 0 }, { opacity: 1, duration: 0.01, immediateRender: false }, at);
   tl.fromTo(p.blade, { x: 0 }, { x: travel, duration: 0.62, ease: "power4.in", immediateRender: false }, at);
@@ -69,7 +71,7 @@ export function addSlice(
   tl.fromTo(p.slit, { opacity: 1 }, { opacity: 0, duration: 0.3, immediateRender: false }, peel);
   tl.fromTo(p.top, { yPercent: 0, rotateX: 0, z: 0 }, { yPercent: -58, rotateX: 34, z: -140, duration: 1.2, ease: "power3.inOut", immediateRender: false }, peel);
   tl.fromTo(p.bottom, { yPercent: 0, rotateX: 0, z: 0 }, { yPercent: 58, rotateX: -34, z: -140, duration: 1.2, ease: "power3.inOut", immediateRender: false }, peel);
-  tl.fromTo([p.top, p.bottom], { opacity: 1 }, { opacity: 0, duration: 0.45, ease: "power1.in", immediateRender: false }, `${peel}+=0.8`);
+  tl.fromTo([p.top, p.bottom], { opacity: 1 }, { opacity: 0, duration: fade.duration ?? 0.45, ease: "power1.in", immediateRender: false }, `${peel}+=${fade.at ?? 0.8}`);
   if (reveal?.el) {
     const from = reveal.from ?? 0.92;
     const to = reveal.to ?? 1;

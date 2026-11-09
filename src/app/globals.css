@@ -78,12 +78,15 @@
 }
 
 html {
+  overflow-x: clip; /* with body below: body clips itself instead of handing it to the viewport */
   background: var(--color-ink);
   color: var(--color-paper);
   -webkit-text-size-adjust: 100%;
 }
 
 body {
+  /* glows and stamps may bleed past the edge; never let them widen the page (clip keeps sticky working) */
+  overflow-x: clip;
   font-family: var(--font-body);
   font-size: var(--text-body);
   line-height: 1.6;
@@ -122,9 +125,114 @@ html[data-intro="done"] #gc-intro {
 html[data-intro="play"] body {
   overflow: hidden;
 }
-/* Home: the header logo waits at the top while the hero shows the big one (components/home/HeaderFlyer.tsx) */
-html[data-hero="live"] :is([data-header-mark], [data-header-text]) {
+
+/* Home hero story (components/home/FriendStory.tsx) */
+.fs-steam path {
+  transform-box: fill-box;
+  animation: fs-steam 2.6s ease-in-out infinite;
+}
+.fs-steam path:nth-child(2) {
+  animation-delay: -0.9s;
+}
+.fs-steam path:nth-child(3) {
+  animation-delay: -1.7s;
+}
+@keyframes fs-steam {
+  0% {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  40% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-14px);
+    opacity: 0;
+  }
+}
+/* Tap the person: their shield flinches */
+.fs-world.is-poked .p-shield {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: fs-flinch 0.09s linear 6 alternate;
+}
+@keyframes fs-flinch {
+  from {
+    transform: scale(1.04) translateX(-5px);
+  }
+  to {
+    transform: scale(1.04) translateX(5px);
+  }
+}
+/* The story art ignores the mouse (hidden layers would block clicks); only the tap targets listen */
+.fs-world .fs-cam * {
+  pointer-events: none;
+}
+.fs-world .fs-cam :is(.p-hit, .cup-hit) {
+  pointer-events: all;
+}
+/* Just for fun: click the coffee; click it fast and the person gets angry */
+.cup-say,
+.cup-say-angry {
+  transform-box: fill-box;
+  transform-origin: 0% 100%;
+  transform: scale(0);
   opacity: 0;
+}
+.fs-world.cup-said:not(.cup-angry) .cup-say {
+  animation: cup-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.fs-world.cup-angry .cup-say-angry {
+  animation: cup-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, cup-shake 0.08s linear 0.3s 10 alternate;
+}
+@keyframes cup-pop {
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes cup-shake {
+  from {
+    transform: scale(1.04) translateX(-4px);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.04) translateX(4px);
+    opacity: 1;
+  }
+}
+/* The scroll cue on the hero's first screen */
+.fs-cue-dot {
+  animation: fs-cue 1.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+@keyframes fs-cue {
+  0% {
+    transform: translate(-50%, 0);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, 12px);
+    opacity: 0;
+  }
+}
+/* The rewind: tape lines rolling up the screen */
+.fs-scan {
+  background: repeating-linear-gradient(to bottom, rgba(243, 241, 236, 0.07) 0 2px, transparent 2px 6px);
+  animation: fs-roll 0.6s linear infinite;
+}
+@keyframes fs-roll {
+  to {
+    background-position: 0 -60px;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  /* Until the scene script takes over, no line shows (the film starts on the steam) */
+  .friend-story:not(.is-ready) .fs-line {
+    opacity: 0;
+  }
 }
 
 /* Safety net: if scripts never run, the intro hides itself after 18s. */
@@ -150,6 +258,9 @@ html[data-hero="live"] :is([data-header-mark], [data-header-text]) {
   opacity: 1;
 }
 .scroll-read.settle-signal [data-s="2"] {
+  color: var(--color-signal);
+}
+.scroll-read [data-keep][data-s="2"] {
   color: var(--color-signal);
 }
 
@@ -351,4 +462,213 @@ html[data-hero="live"] :is([data-header-mark], [data-header-text]) {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Beliefs: the old idea gets struck through in red (components/home/BeliefStrike.tsx) */
+.belief-strike {
+  transform: scaleX(0);
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s;
+}
+.is-struck .belief-strike {
+  transform: scaleX(1);
+}
+.belief-old {
+  transition: color 0.45s linear 0.4s;
+}
+
+/* Who it's for: polaroids (components/home/AudiencePolaroids.tsx) */
+.pol {
+  transform: translate(var(--dx, 0px), var(--dy, 0px)) rotate(var(--r, 0deg));
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.pol-table.is-live .pol {
+  cursor: grab;
+  touch-action: none;
+}
+.pol-table.is-live .pol:hover {
+  transform: translate(var(--dx, 0px), var(--dy, 0px)) rotate(0deg) scale(1.03);
+}
+.pol.is-grabbed {
+  cursor: grabbing;
+  transition: none;
+  transform: translate(var(--dx, 0px), var(--dy, 0px)) rotate(calc(var(--r, 0deg) * -0.5)) scale(1.06);
+}
+.pol-sticker {
+  transform: scale(0) rotate(-30deg);
+  opacity: 0;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s linear;
+}
+.pol:hover .pol-sticker,
+.pol.is-grabbed .pol-sticker {
+  transform: scale(1) rotate(12deg);
+  opacity: 1;
+}
+.pol-photo {
+  background-color: #f3f1ec;
+  background-image: radial-gradient(rgb(21 19 19 / 0.16) 1.2px, transparent 1.4px);
+  background-size: 7px 7px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .belief-strike {
+    transform: scaleX(1);
+    transition: none;
+  }
+}
+
+/* Hero depth: golden window glow (top-left) + soft warm vignette (components/home/FriendStory.tsx) */
+.fs-light {
+  background:
+    radial-gradient(60% 70% at 18% 22%, rgb(255 205 120 / 0.22), transparent 70%),
+    radial-gradient(120% 90% at 55% 55%, transparent 55%, rgb(120 90 50 / 0.18) 100%);
+  mix-blend-mode: multiply;
+}
+
+/* Hero story: day / night (FriendStory). Night crossfades the café to its after-dark drawing,
+   cools the café layer, and lets the hanging lamps carry the light. */
+.friend-story .cafe-night {
+  opacity: 0;
+  transition: opacity 900ms var(--ease-inout, ease-in-out);
+}
+.friend-story.is-night .cafe-night {
+  opacity: 1;
+}
+.friend-story .lamp-cone {
+  opacity: 0.32;
+  transition: opacity 900ms ease-in-out;
+}
+.friend-story .lamp-bulb {
+  opacity: 0.35;
+  transition: opacity 900ms ease-in-out;
+}
+.friend-story.is-night .lamp-cone {
+  opacity: 1;
+}
+.friend-story.is-night .lamp-bulb {
+  opacity: 1;
+}
+.friend-story.is-night .fs-light {
+  background:
+    radial-gradient(120% 90% at 55% 55%, transparent 45%, rgb(8 10 28 / 0.45) 100%);
+}
+.friend-story.is-night .fs-words .text-ink,
+.friend-story.is-night .fs-words .fs-scene {
+  color: var(--color-paper);
+}
+.friend-story.is-night .fs-daynight {
+  background: rgb(12 11 11 / 0.7);
+  color: var(--color-paper);
+  border-color: rgb(243 241 236 / 0.2);
+}
+.friend-story.is-night .fs-daynight > span {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+/* Hero story: the rewind reads like a tape rewinding (flicker, scan lines, a rolling tracking band) */
+.fs-tape-lines {
+  background: repeating-linear-gradient(to bottom, rgb(243 241 236 / 0.07) 0 1px, transparent 1px 4px);
+}
+.fs-tape-band {
+  top: -20svh;
+  background: linear-gradient(to bottom, transparent, rgb(243 241 236 / 0.16) 40%, rgb(243 241 236 / 0.05) 60%, transparent);
+  filter: blur(1px);
+}
+.fs-rewind.is-on .fs-tape-band {
+  animation: fs-tape-roll 0.7s linear infinite;
+}
+.fs-rewind.is-on .fs-tape-wash {
+  animation: fs-tape-flicker 0.23s steps(2) infinite;
+}
+.fs-rewind.is-on .fs-tape-lines {
+  animation: fs-tape-jitter 0.18s steps(3) infinite;
+}
+.fs-rewind.is-on .fs-tape-label {
+  animation: fs-tape-blink 0.9s steps(1) infinite;
+}
+@keyframes fs-tape-roll {
+  to {
+    transform: translateY(140svh);
+  }
+}
+@keyframes fs-tape-flicker {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.84;
+  }
+}
+@keyframes fs-tape-jitter {
+  0% {
+    transform: translate(0, 0);
+  }
+  33% {
+    transform: translate(-3px, 1px);
+  }
+  66% {
+    transform: translate(2px, -1px);
+  }
+}
+@keyframes fs-tape-blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+.friend-story .cafe-soft {
+  fill: #f3f1ec;
+  opacity: 0.4;
+  transition: fill 900ms ease-in-out, opacity 900ms ease-in-out;
+}
+.friend-story.is-night .cafe-soft {
+  fill: #121831;
+  opacity: 0.42;
+}
+/* one plain tone under the room (the why-chain), matched to the scrim so no band shows */
+.friend-story .cafe-under,
+.friend-story .under-stop {
+  fill: #f3f1ec;
+  stop-color: #f3f1ec;
+  transition: fill 900ms ease-in-out, stop-color 900ms ease-in-out;
+}
+.friend-story.is-night .cafe-under,
+.friend-story.is-night .under-stop {
+  fill: #0c0b0b;
+  stop-color: #0c0b0b;
+}
+/* night: the customer's balloons turn white with ink words; the shield is drawn in white */
+.friend-story.is-night .who-person > path {
+  fill: #fff;
+}
+.friend-story.is-night .who-person > text {
+  fill: #151313;
+}
+.friend-story.is-night .p-shield {
+  stroke: #fff;
+  fill: #fff;
+}
+/* the opening card has a real edge: a hard ink line and a soft shadow where his hands are */
+.fs-card {
+  border-left: 3px solid var(--color-ink);
+  box-shadow: -22px 0 40px -14px rgb(12 11 11 / 0.35);
+  will-change: transform;
+}
+.friend-story .fs-scrim {
+  background: linear-gradient(to right, rgb(243 241 236 / 0.82), rgb(243 241 236 / 0.5) 30%, transparent 52%);
+  transition: background 900ms ease-in-out;
+}
+.friend-story.is-night .fs-scrim {
+  background: linear-gradient(to right, rgb(12 11 11 / 0.78), rgb(12 11 11 / 0.45) 30%, transparent 52%);
+}
+@media (max-width: 767px) {
+  .friend-story .fs-scrim {
+    background: linear-gradient(to top, rgb(243 241 236 / 0.9), rgb(243 241 236 / 0.55) 32%, transparent 50%);
+  }
+  .friend-story.is-night .fs-scrim {
+    background: linear-gradient(to top, rgb(12 11 11 / 0.85), rgb(12 11 11 / 0.5) 32%, transparent 50%);
+  }
+}
+/* night: the dotted line down the why-chain is white */
+.friend-story.is-night .why-line {
+  stroke: #fff;
+  opacity: 0.55;
 }

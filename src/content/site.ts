@@ -26,6 +26,18 @@ export const site = {
     watchWithSound: "Watch with sound",
     skipIntro: "Skip intro",
     seatsLabel: "10 seats per batch",
+    stepsLabel: "Steps", // the "3 / 7" counter on the journey
+    certified: "GenClosers Certified", // the certificate's name (core content: certificate)
+    // UI copy: the sample certificate the journey sheet flips over to (course page)
+    certificate: {
+      title: "Certificate",
+      subtitle: "of completion",
+      presented: "Proudly presented to",
+      name: "Your name",
+      for: "for completing",
+      date: "Date",
+      signature: "Signature",
+    },
     countdown: { days: "Days", hours: "Hours", minutes: "Mins", seconds: "Secs" },
   },
 

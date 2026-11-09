@@ -7,6 +7,8 @@ export type Field =
 
 export const applicationForm = {
   heading: "Reserve My Seat", // UI copy (reuses the CTA label)
+  // Owner 2026-11-10: the big line beside the form, the salesman leans on it (line 2 in red)
+  cheer: ["You can", "do it."],
   submitLabel: "Reserve My Seat",
   sendingLabel: "Sending…", // UI copy
   fields: [

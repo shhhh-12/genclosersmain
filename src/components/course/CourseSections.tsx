@@ -1,13 +1,13 @@
-import { Reveal, WordReveal } from "@/components/motion/Reveal";
+import { Reveal } from "@/components/motion/Reveal";
 import { ScrollRead } from "@/components/motion/ScrollRead";
 import { VslPlayer } from "@/components/media/VslPlayer";
 import { LoopBand } from "@/components/media/LoopVideo";
 import { AccordionItem } from "@/components/ui/Accordion";
-import { Arrow } from "@/components/ui/Icons";
 import { Price } from "@/components/ui/Price";
 import { Txt } from "@/components/ui/Text";
 import { GlassPanel } from "@/components/ui/Glass";
 import { SeatRow } from "@/components/ui/Seats";
+import { DotField } from "@/components/ui/DotField";
 import { UrgencyStrip } from "./Cta";
 import { TestimonialRow } from "./Testimonials";
 import { ApplyForm } from "./ApplyForm";
@@ -35,23 +35,16 @@ export function CourseHero({ course }: { course: Course }) {
   return (
     <section className="px-(--gutter) pt-28 pb-(--section-y) sm:pt-36">
       <div className="mx-auto max-w-(--container-page)">
-        <Reveal>
-          <p className="eyebrow text-signal">{course.eyebrow}</p>
-        </Reveal>
-        <h1 className="mt-5 max-w-[17ch] font-display text-h1 font-semibold tracking-[-0.035em] text-balance">
-          <WordReveal text={course.heading} />
+        <h1 className="max-w-[17ch] font-display text-h1 font-semibold tracking-[-0.035em] text-balance">
+          <ScrollRead text={course.heading} auto keep={course.headingKeep} />
         </h1>
 
         {/* VSL right under the headline */}
-        <Reveal className="mt-10 sm:mt-14" delay={0.15}>
-          <p className="eyebrow mb-4 flex items-center gap-3 text-mute-dark">
-            <span className="h-px w-8 bg-signal" />
-            {course.vsl.lineAbove}
-          </p>
+        <Reveal className="mt-16 sm:mt-24" delay={0.15}>
           <VslPlayer media={course.vsl.video} soundLabel={site.ui.watchWithSound} />
         </Reveal>
 
-        <div className="mt-12 grid gap-10 md:grid-cols-12">
+        <div className="mt-16 grid gap-10 sm:mt-24 md:grid-cols-12">
           <Reveal className="md:col-span-6">
             <p className="max-w-[44ch] text-lead text-mute-dark">{course.subheading}</p>
             <SeatRow label={site.ui.seatsLabel} className="mt-8" />
@@ -131,8 +124,9 @@ export function AboutLoop({ course }: { course: Course }) {
 export function WhatYouGet({ course }: { course: Course }) {
   const w = course.whatYouGet;
   return (
-    <section className="on-paper section-pad">
-      <div className="mx-auto grid max-w-(--container-page) gap-12 lg:grid-cols-12">
+    <section className="on-paper section-pad relative">
+      <DotField />
+      <div className="relative mx-auto grid max-w-(--container-page) gap-12 lg:grid-cols-12">
         <div className="lg:col-span-7">
           <h2 className="font-display text-h2 font-semibold tracking-[-0.03em]">
             <ScrollRead text={w.heading} />
@@ -196,60 +190,6 @@ export function AiAdvantage({ course }: { course: Course }) {
             </Reveal>
           ))}
         </ol>
-      </div>
-    </section>
-  );
-}
-
-export function Curriculum({ course }: { course: Course }) {
-  const c = course.curriculum;
-  return (
-    <section id="curriculum" className="on-paper section-pad">
-      <div className="mx-auto grid max-w-(--container-page) gap-12 lg:grid-cols-12">
-        <div className="lg:col-span-4">
-          <div className="lg:sticky lg:top-24">
-            <h2 className="font-display text-h2 font-semibold tracking-[-0.03em] text-balance">
-              <ScrollRead text={c.heading} />
-            </h2>
-          </div>
-        </div>
-        <div className="lg:col-span-8">
-          {c.groups.map((g, gi) => {
-            const showPart = gi === 0 || c.groups[gi - 1].part !== g.part;
-            return (
-              <div key={`${g.part}-${g.section ?? ""}`} className="mb-10 last:mb-0">
-                {showPart && <p className="eyebrow border-b border-ink pb-3 text-ink">{g.part}</p>}
-                {g.section && <p className="mt-5 font-display text-[1.125rem] font-semibold text-signal-deep">{g.section}</p>}
-                <div className={g.section ? "mt-1" : ""}>
-                  {g.modules.map((m) => (
-                    <AccordionItem
-                      key={m.number}
-                      head={
-                        <span className="flex items-baseline gap-5">
-                          <span className="w-10 shrink-0 font-mono text-small text-mute-light transition-colors group-hover:text-signal">M{n2(m.number)}</span>
-                          <span className="font-display text-[1.25rem] font-semibold tracking-[-0.01em] transition-colors group-hover:text-signal-deep sm:text-h3">
-                            {m.title}
-                          </span>
-                        </span>
-                      }
-                    >
-                      <ul className="space-y-3 pl-[3.75rem]">
-                        {m.points.map((p) => (
-                          <li key={p} className="flex gap-3 text-mute-light">
-                            <span className="mt-[0.2em] text-signal">
-                              <Arrow />
-                            </span>
-                            <span>{p}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </AccordionItem>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
       </div>
     </section>
   );
@@ -323,20 +263,27 @@ export function Apply({ course }: { course: Course }) {
     <section id="apply" className="section-pad border-t border-ink-line">
       <div className="mx-auto grid max-w-(--container-page) gap-12 lg:grid-cols-12">
         <div className="lg:col-span-5">
-          <GlassPanel className="lg:sticky lg:top-24">
-            <div className="p-8 sm:p-10">
-              <p className="eyebrow text-paper/80">{course.eyebrow}</p>
-              <h2 className="mt-4 font-display text-h1 font-semibold tracking-[-0.035em]">{applicationForm.heading}</h2>
-              <Price amount={course.price.amount} className="mt-5 block font-display text-h2 font-semibold" />
-              <SeatRow label={site.ui.seatsLabel} className="mt-6" />
-              <div className="mt-8 border-t border-paper/15 pt-6">
-                <Countdown startsAt={course.startsAt} label={batchFact(course).label} dateLabel={batchFact(course).date} size="compact" />
-              </div>
-              <div className="mt-8 max-w-sm border-t border-paper/15 pt-6">
-                <UrgencyStrip text={course.urgency} />
-              </div>
-            </div>
-          </GlassPanel>
+          <div className="lg:sticky lg:top-28">
+            <h2 className="sr-only">{applicationForm.heading}</h2>
+            {/* "You can do it." with the salesman leaning his forearm on the top line (sizes in em, so they scale together) */}
+            <Reveal>
+              <p aria-label={applicationForm.cheer.join(" ")} className="relative pt-[0.75em] pb-[0.4em] font-display text-[clamp(3.2rem,8vw,8rem)] leading-[0.9] font-semibold tracking-[-0.05em]">
+                <span aria-hidden className="relative inline-block">
+                  {applicationForm.cheer[0]}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/course/salesman-lean.webp"
+                    alt=""
+                    width={395}
+                    height={1000}
+                    className="pointer-events-none absolute top-[-0.66em] left-[calc(100%-0.4em)] h-[2.8em] w-auto max-w-none select-none"
+                  />
+                </span>
+                <br />
+                <span aria-hidden className="text-signal">{applicationForm.cheer[1]}</span>
+              </p>
+            </Reveal>
+          </div>
         </div>
         <div className="lg:col-span-7">
           <ApplyForm courseName={course.name} />

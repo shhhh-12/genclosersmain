@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
-import { Space_Mono } from "next/font/google";
+import { Space_Mono, Patrick_Hand } from "next/font/google";
 import { site } from "@/content/site";
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
+import { TitleCard } from "@/components/layout/TitleCard";
 import "./globals.css";
 
 // Chillax variable (weights 200 to 700), self-hosted from /Fonts, preloaded.
@@ -19,6 +20,15 @@ const chillax = localFont({
 const spaceMono = Space_Mono({
   variable: "--font-space-mono",
   weight: ["400", "700"],
+  subsets: ["latin"],
+  display: "swap",
+  preload: false,
+});
+
+// Hand lettering for the hero's speech balloons (comic style), self-hosted at build time.
+const hand = Patrick_Hand({
+  variable: "--font-hand",
+  weight: "400",
   subsets: ["latin"],
   display: "swap",
   preload: false,
@@ -46,9 +56,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en-IN" suppressHydrationWarning className={`${chillax.variable} ${spaceMono.variable}`}>
+    <html lang="en-IN" suppressHydrationWarning className={`${chillax.variable} ${spaceMono.variable} ${hand.variable}`}>
       <body className="min-h-dvh bg-ink text-paper">
         <SmoothScroll />
+        <TitleCard />
         {children}
       </body>
     </html>

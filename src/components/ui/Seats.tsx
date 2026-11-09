@@ -3,17 +3,15 @@
 import { motion, useReducedMotion } from "motion/react";
 import { ease } from "@/lib/motion";
 
-/** One seat, drawn as a simple chair from the front. */
+/** One seat: a café chair from the front (slatted back, seat, splayed legs), so it reads as a chair. */
 function Seat({ taken }: { taken: boolean }) {
+  const line = taken ? "stroke-ink-line" : "stroke-signal";
   return (
-    <svg viewBox="0 0 24 26" className="h-full w-auto" aria-hidden>
-      <path
-        d="M6 3.5h12a2 2 0 0 1 2 2V13H4V5.5a2 2 0 0 1 2-2Z"
-        className={taken ? "fill-ink-line stroke-ink-line" : "fill-signal/15 stroke-signal"}
-        strokeWidth={1.6}
-      />
-      <path d="M2.5 13.5h19a1 1 0 0 1 1 1V17a1 1 0 0 1-1 1h-19a1 1 0 0 1-1-1v-2.5a1 1 0 0 1 1-1Z" className={taken ? "fill-ink-line" : "fill-signal"} />
-      <path d="M5 18v5M19 18v5" className={taken ? "stroke-ink-line" : "stroke-signal"} strokeWidth={1.8} strokeLinecap="round" />
+    <svg viewBox="0 0 24 30" className="h-full w-auto" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M6 15V4.5A2.5 2.5 0 0 1 8.5 2h7A2.5 2.5 0 0 1 18 4.5V15" className={line} strokeWidth={2} />
+      <path d="M10 3v12M14 3v12" className={line} strokeWidth={1.4} />
+      <rect x="3" y="14.2" width="18" height="3.6" rx="1.5" className={taken ? "fill-ink-line" : "fill-signal"} />
+      <path d="M5.6 18.2 4.6 28M18.4 18.2l1 9.8M7.5 23h9" className={line} strokeWidth={2} />
     </svg>
   );
 }

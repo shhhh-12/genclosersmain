@@ -13,7 +13,10 @@ const salesProgram: Course = {
   shortName: "Sales is all you need",
   tagline: "Sales is not a talent. It is a system you can learn.",
   eyebrow: "GenClosers · Only 10 seats per batch",
+  // Owner supplied, 2026-11-10 (358 x 264; send a larger version for sharper screens)
+  thumbnail: { src: "/courses/sales-is-all-you-need.webp", alt: "How to start a sales call? Step by step guide", width: 358, height: 264 },
   heading: "Sales is not a talent. It is a system you can learn.",
+  headingKeep: "system you can learn", // owner 2026-11-10: stays red after the read
   subheading:
     "Learn to take any conversation from hello to a closed deal, without pushing anyone. 21 modules, AI scored practice on every key skill, and a live 1:1 mock call to finish.",
 

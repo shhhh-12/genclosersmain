@@ -45,7 +45,11 @@ export type Course = {
   shortName: string;
   tagline: string;
   eyebrow: string;
+  /** Card image on the course listing (owner supplied). */
+  thumbnail?: { src: string; alt: string; width: number; height: number };
   heading: string;
+  /** Part of the heading that turns red after it reads itself (course page). */
+  headingKeep?: string;
   subheading: string;
   price: { amount: number; currency: "INR"; display: string };
   /** Batch start, ISO with time zone. Drives the countdown; it hides itself once passed. */

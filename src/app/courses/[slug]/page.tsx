@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { CtaRow } from "@/components/course/Cta";
-import { JourneyPinned } from "@/components/course/JourneyPinned";
+import { JourneySheet } from "@/components/course/JourneySheet";
+import { CurriculumStack } from "@/components/course/CurriculumStack";
 import { CtaBar } from "@/components/course/CtaBar";
 import { site } from "@/content/site";
 import {
@@ -12,7 +13,6 @@ import {
   AboutLoop,
   WhatYouGet,
   AiAdvantage,
-  Curriculum,
   Outcomes,
   Testimonials,
   Faqs,
@@ -53,17 +53,17 @@ export default async function CoursePage({ params }: PageProps<"/courses/[slug]"
         <CountdownBand course={course} />
         <AboutLoop course={course} />
         <WhatYouGet course={course} />
+        <JourneySheet heading={course.journey.heading} steps={course.journey.steps} courseName={course.name} />
+        <div className="px-(--gutter) pb-(--section-y)">
+          <CtaRow course={course} />
+        </div>
         <AiAdvantage course={course} />
-        <Curriculum course={course} />
+        <CurriculumStack course={course} />
         <div className="on-paper px-(--gutter) pb-(--section-y)">
           <CtaRow course={course} tone="light" />
         </div>
         <Outcomes course={course} />
         <Testimonials course={course} />
-        <JourneyPinned heading={course.journey.heading} steps={course.journey.steps} />
-        <div className="px-(--gutter) pb-(--section-y)">
-          <CtaRow course={course} />
-        </div>
         <Faqs course={course} />
         <Apply course={course} />
       </main>

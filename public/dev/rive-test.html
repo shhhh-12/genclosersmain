@@ -1,0 +1,13 @@
+<!doctype html><html><head><meta charset="utf-8"><title>rive test</title>
+<style>body{margin:0;background:#ddd;font:12px monospace}canvas{width:100vw;height:100vh;display:block}</style></head>
+<body><canvas id="c" width="800" height="800"></canvas>
+<script src="https://unpkg.com/@rive-app/canvas@2.31.2/rive.js"></script>
+<script>
+const q = new URLSearchParams(location.search);
+window.__state = { ok: false };
+const r = new rive.Rive({ src: q.get('f'), canvas: document.getElementById('c'), autoplay: false, artboard: q.get('ab') || undefined,
+  layout: new rive.Layout({ fit: rive.Fit.Contain }),
+  onLoad: () => { const c = r.contents; window.__state = { ok: true, contents: c }; r.resizeDrawingSurfaceToCanvas(); },
+  onLoadError: (e) => { window.__state = { ok: false, error: String(e && e.data || e) }; } });
+window.__r = r;
+</script></body></html>

@@ -7,4 +7,4 @@ export const INTRO_KEY = "gc-intro";
 export const INTRO_EVERY_LOAD = true;
 
 /** Runs before first paint on the home page: decides whether the intro plays (never for reduced motion). */
-export const introGateScript = `(function(){try{var d=document.documentElement;var every=${INTRO_EVERY_LOAD};var seen=!every&&sessionStorage.getItem('${INTRO_KEY}')==='1';var rm=window.matchMedia('(prefers-reduced-motion: reduce)').matches;d.dataset.intro=(seen||rm)?'done':'play';if(!rm)d.dataset.hero=window.scrollY>40?'docked':'live';}catch(e){document.documentElement.dataset.intro='done';}})();`;
+export const introGateScript = `(function(){try{var d=document.documentElement;var every=${INTRO_EVERY_LOAD};var seen=!every&&sessionStorage.getItem('${INTRO_KEY}')==='1';var rm=window.matchMedia('(prefers-reduced-motion: reduce)').matches;d.dataset.intro=(seen||rm)?'done':'play';}catch(e){document.documentElement.dataset.intro='done';}})();`;
