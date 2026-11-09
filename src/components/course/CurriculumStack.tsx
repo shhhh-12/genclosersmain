@@ -57,9 +57,15 @@ export function CurriculumStack({ course }: { course: Course }) {
     const place = () => {
       const vh = window.innerHeight;
       const base = window.innerWidth >= 1024 ? 96 : 76;
+      // Each card also sits low enough that its bottom covers the card beneath (a shorter card would
+      // otherwise stop higher and leave the older card's last rows peeking out under it).
+      let prevBottom = -Infinity;
       cards.forEach((el, gi) => {
-        const want = base + gi * 14;
-        el.style.top = `${Math.min(want, vh - el.offsetHeight - 16)}px`;
+        const h = el.offsetHeight;
+        let top = Math.max(base + gi * 14, prevBottom + 6 - h);
+        top = Math.min(top, vh - h - 16);
+        prevBottom = top + h;
+        el.style.top = `${top}px`;
       });
     };
     place();
@@ -154,7 +160,14 @@ export function CurriculumStack({ course }: { course: Course }) {
               </article>
             );
           })}
-          <div className="relative z-10 mt-10 flex justify-center">
+          {/* room for the last card to settle on the pile */}
+          <div className="h-[10vh] motion-reduce:hidden" aria-hidden />
+        </div>
+      </div>
+      {/* below the pile, never over it: outside the sticky column, so the cards scroll away first */}
+      <div className="mx-auto max-w-(--container-page) lg:grid lg:grid-cols-12">
+        <div className="lg:col-span-8 lg:col-start-5">
+          <div className="mt-4 flex justify-center">
             <button
               type="button"
               onClick={() => {
@@ -170,8 +183,6 @@ export function CurriculumStack({ course }: { course: Course }) {
               </span>
             </button>
           </div>
-          {/* room for the last card to settle on the pile */}
-          <div className="h-[20vh] motion-reduce:hidden" aria-hidden />
         </div>
       </div>
     </section>
