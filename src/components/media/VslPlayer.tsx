@@ -4,7 +4,7 @@
  * VSL player.
  * - Preview: plays muted on a loop as soon as it is on screen (never with sound on its own).
  *   Clicking anywhere restarts it from the beginning with sound and shows the controls.
- * - Ambient light: the video's own colours glow behind the frame, tinted red (like a TV bias light).
+ * - Ambient light: a clean red glow behind the frame (pure brand red; sampling the grey video made it muddy).
  * - Fixed aspect ratio, so no layout shift. 720p on phones, 1080p elsewhere.
  * - Keyboard: Space/K play-pause, M mute, F fullscreen, ←/→ seek 5s.
  * - Captions track appears automatically once `media.captions` is set.
@@ -25,7 +25,6 @@ function fmt(t: number) {
 export function VslPlayer({ media, soundLabel }: { media: Media; soundLabel: string }) {
   const wrap = useRef<HTMLDivElement>(null);
   const video = useRef<HTMLVideoElement>(null);
-  const ambient = useRef<HTMLCanvasElement>(null);
   const [mode, setMode] = useState<"poster" | "preview" | "full">("poster");
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(true);
@@ -62,18 +61,6 @@ export function VslPlayer({ media, soundLabel }: { media: Media; soundLabel: str
     );
     io.observe(v);
     return () => io.disconnect();
-  }, []);
-
-  // Ambient light: sample the frame into a tiny canvas a few times a second
-  const drawAmbient = useCallback(() => {
-    const v = video.current;
-    const c = ambient.current;
-    if (!v || !c || v.readyState < 2) return;
-    const ctx = c.getContext("2d");
-    if (!ctx) return;
-    try {
-      ctx.drawImage(v, 0, 0, c.width, c.height);
-    } catch {}
   }, []);
 
   const startFull = useCallback(() => {
@@ -137,10 +124,10 @@ export function VslPlayer({ media, soundLabel }: { media: Media; soundLabel: str
   return (
     <div className="relative isolate">
       {/* Ambient light behind the frame */}
-      <div aria-hidden className="pointer-events-none absolute -inset-[6%] -z-10">
-        <div className="absolute inset-[8%] rounded-[40%] bg-signal/35 blur-[70px]" />
-        <canvas ref={ambient} width={32} height={18} className="vsl-ambient absolute inset-0 h-full w-full opacity-80 blur-[60px] saturate-150" />
-        <div className="absolute inset-0 bg-signal/25 mix-blend-color blur-[40px]" />
+      {/* clean bias light: a wide soft red pool, strongest under the frame, and a tight rim at the edges */}
+      <div aria-hidden className="pointer-events-none absolute -inset-x-[3%] -inset-y-[4%] -z-10">
+        <div className="absolute inset-x-[12%] top-[22%] -bottom-[6%] rounded-full bg-signal opacity-40 blur-[110px] max-sm:blur-[60px]" />
+        <div className="absolute inset-[3%] rounded-[28px] bg-signal-deep opacity-45 blur-[34px] max-sm:blur-[20px]" />
       </div>
 
       <div
@@ -170,9 +157,7 @@ export function VslPlayer({ media, soundLabel }: { media: Media; soundLabel: str
           onEnded={() => setPlaying(false)}
           onTimeUpdate={(e) => {
             setTime(e.currentTarget.currentTime);
-            drawAmbient();
           }}
-          onLoadedData={drawAmbient}
           onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
           onError={() => setFailed(true)}
         >
