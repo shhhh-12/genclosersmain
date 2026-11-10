@@ -19,6 +19,7 @@
  */
 
 import { Fragment, useEffect, useRef, useState } from "react";
+import { getLenis } from "@/lib/scroll";
 import Link from "next/link";
 import { Arrow } from "@/components/ui/Icons";
 import { createScrollScene, seg, lerp, clamp01, easeOut, easeInOut } from "@/lib/scrollScene";
@@ -111,6 +112,13 @@ const LAMP_BOTTOM = 600;
 const LAMP_RIM = LAMP_BOTTOM - LAMP_H * 0.13; // the shade's lower rim in the drawing
 const LAMPS = [460, 700, 940]; // all three inside the opening frame, clear of the day/night switch
 const BOOT_SECONDS = SHOVES.reduce((n, s) => n + s[1] + s[2], 0);
+// Phones: each tap plays on to the next moment like a video (story progress c, then the About card = 1)
+const STOPS = [0.213, 0.284, 0.398, 0.497, 0.6, 0.75, 0.8365, 0.964, 1];
+const PLAY_SPEED = 0.035; // story progress per second while playing (the whole story in about 28 s)
+const IDLE_FIRST = 5; // first screen: seconds after he starts typing before the scroll / tap reminder
+const IDLE_STUCK = 3; // mid-story: seconds without input before it comes back
+const PULL_AT = 0.972; // the ending: from here the curtain pull plays by itself
+const sineInOut = (x: number) => -(Math.cos(Math.PI * x) - 1) / 2;
 const power2InOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 /** Push progress after `sec` seconds, and whether he is holding (catching his breath). */
 function shoveAt(sec: number) {
@@ -258,6 +266,8 @@ export function FriendStory({
   coffee,
   eyebrows,
   scrollHint,
+  skip,
+  idle,
   night: nightCopy,
   about,
 }: {
@@ -266,7 +276,9 @@ export function FriendStory({
   rewind: string;
   coffee: string;
   eyebrows: readonly string[];
-  scrollHint: { text: string; accent: string };
+  scrollHint: { text: string; tapText: string; accent: string };
+  skip: string;
+  idle: { scroll: string; tap: string };
   night: { toNight: string; toDay: string; label: string };
   about: { heading: string; heavy?: string; body: string; link?: { href: string; label: string } };
 }) {
@@ -319,6 +331,11 @@ export function FriendStory({
       set(el, `translate(${el.getAttribute("data-x")} ${el.getAttribute("data-y")}) scale(${((0.94 + 0.06 * e) * (narrow ? 0.9 : 1)).toFixed(4)})`);
     };
     const hint = q<HTMLElement>(".fs-hint");
+    const scrim = q<HTMLElement>(".fs-scrim");
+    const skipBtn = q<HTMLButtonElement>(".fs-skip");
+    const idleEl = q<HTMLElement>(".fs-idle");
+    let lineSolid: number[] = [];
+    let hintSolid = 0;
     const effortFx = q<SVGGElement>(".fs-effort");
     let boot = 0;
     let bootStart = -1;
@@ -343,7 +360,16 @@ export function FriendStory({
     let coverAt = 0.85;
     let storyAt = 0.75; // the story ends here; the rest before coverAt is the About card reading itself
     let lastP = 0;
+    let lastC = 0;
     let t = 0;
+    let pull = 0; // seconds into the automatic ending (the curtain pull), timed like the opening
+    let typingAt = -1; // when the opening push finished and he sits typing
+    let readAfterPull = false; // Skip story: read the About heading once the curtain is closed
+    let playing = false; // a tap is playing the story on to the next stop
+    let playTo = -1;
+    let lastInput = 0;
+    let idleOn = false;
+    let scrimSolid = 0;
     const par = { x: 0, y: 0, tx: 0, ty: 0 };
 
     // Brand partner's pushing character (public/brand/huy/push.json). Absent -> the code salesman pushes.
@@ -365,11 +391,15 @@ export function FriendStory({
       coverAt = Math.max(0.5, (range - vh) / range);
       // the About card gets most of a screen of scroll to itself before the next section slides over it
       storyAt = coverAt - Math.min(0.14, (0.9 * vh) / range);
+      // phones: how far up from the bottom each line reaches (the light fade behind the words covers it)
+      lineSolid = lineEls.map((el) => el.offsetHeight + 0.09 * vh + 36);
+      hintSolid = hint.offsetHeight + 0.09 * vh + 36;
     };
 
     const render = (p: number) => {
       lastP = p;
       const c = clamp01(p / storyAt);
+      lastC = c;
 
       // ---- camera: subject right of centre (the words live on the left) ----
       const k = camAt(c);
@@ -408,9 +438,11 @@ export function FriendStory({
           brandPushing = true;
           brand.update(edge, FLOOR, edge - (viewL - 4));
         }
-      } else if (c > 0.972) {
-        const e = easeInOut(seg(c, 0.972, 1));
-        edge = lerp(viewR + 40, viewL - 4, e);
+      } else if (pull > 0) {
+        // the ending plays by itself, with the opening push's timing (three pulls, holds, run-off)
+        const sh = shoveAt(pull);
+        effort = sh.hold;
+        edge = viewR + 40 - sh.p * (viewR - viewL + 44);
         haulKind = "pull";
       }
       // the opening card is paper with the lockup (HTML, moved in screen px); the ink curtain is only the ending
@@ -420,7 +452,7 @@ export function FriendStory({
         card.style.transform = `translate3d(${(((edge - viewL) / vw) * W).toFixed(1)}px, 0, 0)`;
       } else card.style.display = "none";
       // closing at the end: the curtain is the About card (its words are revealed by the edge)
-      if (haulKind === "pull" || c >= 1) {
+      if (haulKind === "pull") {
         const sx = ((edge - viewL) / vw) * W;
         aboutCard.style.display = "";
         aboutCard.style.clipPath = `inset(0 0 0 ${Math.max(0, sx).toFixed(1)}px)`;
@@ -438,7 +470,8 @@ export function FriendStory({
         });
       }
       // the day/night switch belongs to the café: not during the opening push or on the About card
-      const dnOn = boot >= 1 && c < 0.972;
+      // (also hidden during the rewind, where its label would sit on top of it on phones)
+      const dnOn = boot >= 1 && pull === 0 && c < PULL_AT && tri(c, 0.285, 0.35) < 0.05;
       dayNight.style.opacity = dnOn ? "" : "0";
       dayNight.style.pointerEvents = dnOn ? "" : "none";
       // the hauler: hands on the curtain edge, drawn above it
@@ -460,6 +493,18 @@ export function FriendStory({
       const hinted = easeOut(seg(boot, 0.86, 1)) * (1 - seg(c, 0.012, 0.04));
       hint.style.opacity = hinted.toFixed(3);
       hint.style.transform = `translate3d(0, ${((1 - easeOut(seg(boot, 0.86, 1))) * 18 + seg(c, 0.012, 0.04) * -14).toFixed(1)}px, 0)`;
+      // Skip story: on the first screen only, gone once the story starts
+      skipBtn.style.opacity = hinted.toFixed(3);
+      skipBtn.style.pointerEvents = hinted > 0.5 ? "auto" : "none";
+      skipBtn.tabIndex = hinted > 0.5 ? 0 : -1;
+      // still for a while: a small reminder (mouse on desktop, tap on phones)
+      // (first screen: 5 s after he starts typing; later: 3 s without input). CSS fades it in.
+      const quiet = c < 0.012 ? t - Math.max(lastInput, typingAt) > IDLE_FIRST : t - lastInput > IDLE_STUCK;
+      const idleWant = boot >= 1 && typingAt >= 0 && !playing && pull === 0 && c < 0.965 && quiet;
+      if (idleWant !== idleOn) {
+        idleOn = idleWant;
+        idleEl.classList.toggle("is-on", idleOn);
+      }
 
       // ---- lines ----
       lineEls.forEach((el, i) => {
@@ -479,6 +524,19 @@ export function FriendStory({
           }
         }
       });
+
+      // ---- the light fade behind the words ----
+      // off during the rewind (it would show as a light patch over the dark wash);
+      // on phones it grows to cover whichever line is on screen
+      scrim.style.opacity = (1 - tapeOn).toFixed(3);
+      if (narrow) {
+        let want = hinted > 0.02 ? hintSolid : 0;
+        lineEls.forEach((el, i) => {
+          if (Number(el.style.opacity) > 0.02) want = Math.max(want, lineSolid[i] ?? 0);
+        });
+        if (want > 0) scrimSolid = scrimSolid ? scrimSolid + (want - scrimSolid) * 0.2 : want;
+        scrim.style.setProperty("--scrim-solid", `${Math.round(scrimSolid || 0.32 * H)}px`);
+      }
 
       // ---- beats ----
       const barge = easeOut(seg(c, 0.085, 0.125)) * (1 - easeInOut(seg(c, 0.295, 0.33)));
@@ -626,6 +684,21 @@ export function FriendStory({
         if (lastP > 0.004) bootStart -= (dt / 1000) * 3;
         boot = clamp01((t - bootStart) / BOOT_SECONDS);
       }
+      // the ending: once the story reaches it the curtain pull plays by itself; scrolling back reopens it
+      if (boot >= 1 && typingAt < 0) typingAt = t;
+      if (boot >= 1) pull = lastC >= PULL_AT ? Math.min(BOOT_SECONDS, pull + dt / 1000) : Math.max(0, pull - (dt / 1000) * 2);
+      // after Skip story: the curtain has closed, now play the About heading's reading highlight
+      if (readAfterPull && pull >= BOOT_SECONDS) {
+        readAfterPull = false;
+        playing = true;
+        playTo = 1;
+        scrollToY(yAt(aboutP()), 2.8, () => {
+          if (playTo !== 1) return;
+          playing = false;
+          playTo = -1;
+          lastInput = t;
+        });
+      }
       // lamps: damped pendulums (about 2 s a swing)
       const ds = dt / 1000;
       lamps.forEach((lp, i) => {
@@ -708,6 +781,77 @@ export function FriendStory({
     };
     cupHit.addEventListener("click", onCup);
 
+    // ---- phones: tap to play on; Skip story; the idle reminder ----
+    const yAt = (pp: number) => sec.getBoundingClientRect().top + window.scrollY + pp * Math.max(1, sec.offsetHeight - window.innerHeight);
+    const aboutP = () => coverAt - (coverAt - storyAt) * 0.2; // the About card, its heading read
+    let fallbackRaf = 0;
+    const scrollToY = (y: number, dur: number, done: () => void) => {
+      const lenis = getLenis();
+      if (lenis) {
+        lenis.scrollTo(y, { duration: dur, easing: sineInOut, force: true, onComplete: done });
+        return;
+      }
+      const y0 = window.scrollY;
+      const t0 = performance.now();
+      cancelAnimationFrame(fallbackRaf);
+      const step = (now: number) => {
+        const u = clamp01((now - t0) / (dur * 1000));
+        window.scrollTo(0, lerp(y0, y, sineInOut(u)));
+        if (u < 1) fallbackRaf = requestAnimationFrame(step);
+        else done();
+      };
+      fallbackRaf = requestAnimationFrame(step);
+    };
+    const stopPlaying = () => {
+      if (!playing) return;
+      playing = false;
+      playTo = -1;
+      cancelAnimationFrame(fallbackRaf);
+      getLenis()?.scrollTo(window.scrollY, { immediate: true, force: true });
+    };
+    const playNext = () => {
+      const from = playing && playTo >= 0 ? playTo : lastC;
+      const next = STOPS.find((s) => s > from + 0.004);
+      if (next === undefined) return;
+      playTo = next;
+      playing = true;
+      const dur = Math.max(1.2, (next - lastC) / PLAY_SPEED);
+      scrollToY(yAt(next >= 1 ? aboutP() : next * storyAt), dur, () => {
+        if (playTo !== next) return;
+        playing = false;
+        playTo = -1;
+        lastInput = t;
+      });
+    };
+    const onStageTap = (e: MouseEvent) => {
+      if (!narrow || boot < 1) return;
+      if ((e.target as Element).closest("button, a, .p-hit, .cup-hit")) return;
+      playNext();
+    };
+    stage.addEventListener("click", onStageTap);
+    // a real swipe takes over from the playback
+    window.addEventListener("touchmove", stopPlaying, { passive: true });
+
+    const onSkip = () => {
+      // jump to the end of the story and let him drag the curtain closed (the same ending animation)
+      stopPlaying();
+      boot = 1;
+      pull = 0;
+      readAfterPull = true; // once the curtain is closed, the heading reads itself
+      const y = yAt(storyAt); // the very end of the story: the About heading still unread
+      const lenis = getLenis();
+      if (lenis) lenis.scrollTo(y, { immediate: true, force: true });
+      else window.scrollTo(0, y);
+      scene.remeasure();
+    };
+    skipBtn.addEventListener("click", onSkip);
+
+    const onInput = () => {
+      if (!playing) lastInput = t;
+    };
+    const inputs = ["scroll", "wheel", "pointerdown", "keydown", "touchstart"] as const;
+    inputs.forEach((ev) => window.addEventListener(ev, onInput, { passive: true }));
+
     const html = document.documentElement;
 
     const mo = new MutationObserver(() => {
@@ -726,6 +870,11 @@ export function FriendStory({
       stage.removeEventListener("pointermove", onMove);
       hit.removeEventListener("click", tap);
       cupHit.removeEventListener("click", onCup);
+      stage.removeEventListener("click", onStageTap);
+      skipBtn.removeEventListener("click", onSkip);
+      window.removeEventListener("touchmove", stopPlaying);
+      inputs.forEach((ev) => window.removeEventListener(ev, onInput));
+      cancelAnimationFrame(fallbackRaf);
       window.clearTimeout(cupT);
       sec.classList.remove("is-ready");
       sprites.forEach((x) => x.destroy());
@@ -901,7 +1050,12 @@ export function FriendStory({
             <div className="relative mx-auto h-full max-w-(--container-page)">
               <div className="fs-hint absolute bottom-[9svh] left-0 motion-reduce:hidden md:bottom-[38svh]" style={{ opacity: 0 }}>
                 <p className="max-w-[12ch] font-display text-h2 leading-[1.02] font-semibold tracking-[-0.03em] text-balance text-ink">
-                  <Accent line={{ text: scrollHint.text, accent: scrollHint.accent }} />
+                  <span className="md:hidden">
+                    <Accent line={{ text: scrollHint.tapText, accent: scrollHint.accent }} />
+                  </span>
+                  <span className="hidden md:inline">
+                    <Accent line={{ text: scrollHint.text, accent: scrollHint.accent }} />
+                  </span>
                 </p>
               </div>
               {lines.map((l, i) => (
@@ -918,6 +1072,36 @@ export function FriendStory({
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* the first screen: skip straight to the end card */}
+          <button
+            type="button"
+            className="fs-skip absolute right-(--gutter) bottom-5 z-20 rounded-full border border-ink/15 bg-paper/80 px-4 py-2 font-mono text-label tracking-[0.16em] text-ink uppercase backdrop-blur-sm transition-colors hover:border-signal hover:text-signal motion-reduce:hidden"
+            style={{ opacity: 0, pointerEvents: "none" }}
+            tabIndex={-1}
+          >
+            {skip}
+          </button>
+          {/* still for 5 s: a small reminder of how to move on (mouse on desktop, a tap on phones) */}
+          <div
+            aria-hidden
+            className="fs-idle pointer-events-none absolute right-[12%] bottom-[24svh] z-20 flex flex-col items-center gap-2 text-ink motion-reduce:hidden md:right-auto md:bottom-5 md:left-1/2 md:-translate-x-1/2"
+          >
+            <svg viewBox="0 0 24 36" className="hidden h-9 w-6 md:block" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <rect x="1.5" y="1.5" width="21" height="33" rx="10.5" />
+              <circle className="fs-idle-wheel" cx="12" cy="10" r="2.2" fill="currentColor" stroke="none" />
+            </svg>
+            {/* phones: a big tap target (finger sized) */}
+            <svg viewBox="0 0 40 40" className="h-[4.5rem] w-[4.5rem] md:hidden" fill="none" stroke="currentColor" strokeWidth="1.6">
+              <circle className="fs-idle-ripple" cx="20" cy="20" r="16" />
+              <circle cx="20" cy="20" r="11" strokeOpacity="0.35" />
+              <circle className="fs-idle-dot" cx="20" cy="20" r="5.5" fill="currentColor" stroke="none" />
+            </svg>
+            <span className="font-mono text-small tracking-[0.2em] uppercase md:text-label">
+              <span className="hidden md:inline">{idle.scroll}</span>
+              <span className="fs-idle-press inline-block md:hidden">{idle.tap}</span>
+            </span>
           </div>
 
           {/* the end: the ink curtain he drags closed is the About card */}

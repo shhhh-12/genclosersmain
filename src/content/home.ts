@@ -67,7 +67,9 @@ export const home = {
     // Small hand-lettered scene names over the six lines (no numbers: owner 2026-11-10)
     eyebrows: ["the push", "the twist", "the rewind", "the intention", "the real why", "a friend"],
     // The first screen: tells people there is a story and that scrolling plays it
-    scrollHint: { text: "Scroll to understand sales in 5 steps.", accent: "5 steps" },
+    scrollHint: { text: "Scroll to understand sales in 5 steps.", tapText: "Tap to understand sales in 5 steps.", accent: "5 steps" },
+    skip: "Skip story", // first screen only: jumps to the end card
+    idle: { scroll: "Scroll", tap: "Tap here" }, // fades in 5 s after he starts typing, 3 s when stuck mid-story
     coffee: "Don't touch my coffee!", // just for fun: click the cup
     night: { toNight: "Night", toDay: "Day", label: "Switch the café between day and night" },
   },

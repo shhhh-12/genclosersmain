@@ -24,6 +24,8 @@ export function HomeHero() {
       coffee={home.story.coffee}
       eyebrows={home.story.eyebrows}
       scrollHint={home.story.scrollHint}
+      skip={home.story.skip}
+      idle={home.story.idle}
       night={home.story.night}
       about={{ heading: home.hero.heading, heavy: emphasis[home.hero.heading], body: home.hero.body, link: { href: `/courses/${listedCourses[0].slug}`, label: home.seeCourse } }}
     />

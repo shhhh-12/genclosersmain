@@ -671,12 +671,80 @@ html[data-intro="play"] body {
   background: linear-gradient(to right, rgb(12 11 11 / 0.78), rgb(12 11 11 / 0.45) 30%, transparent 52%);
 }
 @media (max-width: 767px) {
+  /* phones: the words sit at the bottom; the fade is solid up to just above the line on screen
+     (--scrim-solid, set by FriendStory), then softens out over 16svh */
   .friend-story .fs-scrim {
-    background: linear-gradient(to top, rgb(243 241 236 / 0.9), rgb(243 241 236 / 0.55) 32%, transparent 50%);
+    background: linear-gradient(
+      to top,
+      rgb(243 241 236 / 0.94),
+      rgb(243 241 236 / 0.86) var(--scrim-solid, 32%),
+      transparent calc(var(--scrim-solid, 32%) + 16svh)
+    );
   }
   .friend-story.is-night .fs-scrim {
-    background: linear-gradient(to top, rgb(12 11 11 / 0.85), rgb(12 11 11 / 0.5) 32%, transparent 50%);
+    background: linear-gradient(
+      to top,
+      rgb(12 11 11 / 0.9),
+      rgb(12 11 11 / 0.8) var(--scrim-solid, 32%),
+      transparent calc(var(--scrim-solid, 32%) + 16svh)
+    );
   }
+}
+/* Hero story: Skip story + the idle reminder */
+.friend-story.is-night .fs-skip {
+  background: rgb(12 11 11 / 0.7);
+  color: var(--color-paper);
+  border-color: rgb(243 241 236 / 0.2);
+}
+.friend-story.is-night .fs-idle {
+  color: var(--color-paper);
+}
+/* the reminder fades in slowly, out quickly */
+.fs-idle {
+  opacity: 0;
+  transition: opacity 300ms ease-in;
+}
+.fs-idle.is-on {
+  opacity: 1;
+  transition: opacity 1400ms cubic-bezier(0.45, 0, 0.25, 1);
+}
+/* "Tap here" is pressed in time with the tap ripple */
+.fs-idle-press {
+  animation: fs-idle-press 1.6s ease-in-out infinite;
+}
+@keyframes fs-idle-press {
+  0%, 100% { transform: scale(1) translateY(0); }
+  10% { transform: scale(0.88) translateY(1px); }
+  24% { transform: scale(1.04) translateY(0); }
+  34% { transform: scale(1); }
+}
+.fs-idle-wheel {
+  animation: fs-idle-wheel 1.6s cubic-bezier(0.5, 0, 0, 1) infinite;
+}
+.fs-idle-ripple {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: fs-idle-ripple 1.6s ease-out infinite;
+}
+.fs-idle-dot {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: fs-idle-dot 1.6s ease-in-out infinite;
+}
+@keyframes fs-idle-wheel {
+  0% { transform: translateY(0); opacity: 1; }
+  60% { transform: translateY(9px); opacity: 0; }
+  61% { transform: translateY(0); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+@keyframes fs-idle-ripple {
+  0% { transform: scale(0.35); opacity: 0.9; }
+  70%, 100% { transform: scale(1.25); opacity: 0; }
+}
+@keyframes fs-idle-dot {
+  0%, 100% { transform: scale(1); }
+  12% { transform: scale(0.7); }
+  24% { transform: scale(1); }
 }
 /* night: the dotted line down the why-chain is white */
 .friend-story.is-night .why-line {
