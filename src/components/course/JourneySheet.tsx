@@ -57,12 +57,12 @@ function Certificate({ courseName }: { courseName: string }) {
       </div>
 
       <div className="relative flex h-full flex-col items-end justify-center px-[6%] py-[5%] text-right">
-        <p className="font-display text-[length:calc(clamp(1.6rem,4.6vw,3.6rem)*var(--type-scale))] leading-none font-semibold tracking-[0.06em] uppercase">{t.title}</p>
+        <p className="font-display text-[length:max(0.875rem,calc(clamp(1.6rem,4.6vw,3.6rem)*var(--type-scale)))] leading-none font-semibold tracking-[0.06em] uppercase">{t.title}</p>
         <p className="mt-1 font-display text-[clamp(0.8rem,2vw,1.5rem)] font-light tracking-[0.32em] uppercase">{t.subtitle}</p>
         <span className="mt-3 block h-px w-[clamp(8rem,26vw,20rem)] bg-paper/50" />
         <div className="mt-[clamp(0.8rem,3vw,2.2rem)] w-full max-w-[34rem] text-center md:mr-[4%]">
           <p className="font-mono text-[clamp(0.55rem,1vw,0.75rem)] tracking-[0.3em] text-paper/70 uppercase">{t.presented}</p>
-          <p className="mt-2 font-display text-[length:calc(clamp(2rem,5.4vw,4.2rem)*var(--type-scale))] leading-none font-semibold tracking-[-0.03em] text-signal">
+          <p className="mt-2 font-display text-[length:max(0.875rem,calc(clamp(2rem,5.4vw,4.2rem)*var(--type-scale)))] leading-none font-semibold tracking-[-0.03em] text-signal">
             {t.name}
           </p>
           <p className="mt-2 text-[clamp(0.7rem,1.4vw,1rem)] text-paper/75">

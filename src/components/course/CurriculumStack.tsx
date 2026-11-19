@@ -92,7 +92,7 @@ export function CurriculumStack({ course }: { course: Course }) {
             </h2>
             {/* the counter climbs as modules pass */}
             <div className="mt-10 hidden lg:block" aria-hidden>
-              <p className="font-mono text-[length:calc(clamp(3rem,6vw,5.5rem)*var(--type-scale))] leading-none tracking-[-0.04em] text-ink tabular-nums">
+              <p className="font-mono text-[length:max(0.875rem,calc(clamp(3rem,6vw,5.5rem)*var(--type-scale)))] leading-none tracking-[-0.04em] text-ink tabular-nums">
                 {n2(seen)}
                 <span className="text-mute-light"> / {n2(total)}</span>
               </p>
@@ -116,13 +116,13 @@ export function CurriculumStack({ course }: { course: Course }) {
                   <p className="eyebrow text-ink">{g.part}</p>
                   <p className="font-mono text-small text-mute-light">{n2(gi + 1)}</p>
                 </div>
-                {g.section && <p className="mt-5 font-display text-[length:calc(1.125rem*var(--type-scale))] font-semibold text-signal-deep">{g.section}</p>}
+                {g.section && <p className="mt-5 font-display text-[length:max(0.875rem,calc(1.125rem*var(--type-scale)))] font-semibold text-signal-deep">{g.section}</p>}
                 {!all && (
                   <ul className="mt-4 space-y-2.5">
                     {g.modules.map((m, mi) => (
                       <li key={m.number} data-mod={firstIdx[gi] + mi + 1} data-part={g.part} className="flex items-baseline gap-4">
                         <span className="w-10 shrink-0 font-mono text-small text-mute-light">M{n2(m.number)}</span>
-                        <span className="font-display text-[length:calc(1.0625rem*var(--type-scale))] font-medium tracking-[-0.01em] sm:text-[length:calc(1.1875rem*var(--type-scale))]">{m.title}</span>
+                        <span className="font-display text-[length:max(0.875rem,calc(1.0625rem*var(--type-scale)))] font-medium tracking-[-0.01em] sm:text-[length:max(0.875rem,calc(1.1875rem*var(--type-scale)))]">{m.title}</span>
                       </li>
                     ))}
                   </ul>
@@ -137,7 +137,7 @@ export function CurriculumStack({ course }: { course: Course }) {
                           head={
                             <span className="flex items-baseline gap-5">
                               <span className="w-10 shrink-0 font-mono text-small text-mute-light transition-colors group-hover:text-signal">M{n2(m.number)}</span>
-                              <span className="font-display text-[length:calc(1.25rem*var(--type-scale))] font-semibold tracking-[-0.01em] transition-colors group-hover:text-signal-deep sm:text-h3">{m.title}</span>
+                              <span className="font-display text-[length:max(0.875rem,calc(1.25rem*var(--type-scale)))] font-semibold tracking-[-0.01em] transition-colors group-hover:text-signal-deep sm:text-h3">{m.title}</span>
                             </span>
                           }
                         >

@@ -32,7 +32,7 @@ export function BrandLink() {
       </span>
       <span
         data-header-text
-        className="font-display text-[length:calc(1.0625rem*var(--type-scale))] font-semibold tracking-[-0.02em]"
+        className="font-display text-[length:max(0.875rem,calc(1.0625rem*var(--type-scale)))] font-semibold tracking-[-0.02em]"
       >
         {site.name}
       </span>

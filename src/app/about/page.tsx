@@ -42,7 +42,7 @@ export default function AboutPage() {
               <figure className="mx-auto w-full max-w-[30rem] rotate-[3deg] rounded-[6px] border-[2.5px] border-ink bg-white p-3 pb-4 text-ink shadow-[10px_12px_0_0_rgba(0,0,0,0.6)]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={about.photo.src} alt={about.photo.alt} width={about.photo.width} height={about.photo.height} className="block h-auto w-full rounded-[3px]" />
-                <figcaption className="mt-3 font-display text-[length:calc(1.1rem*var(--type-scale))] font-semibold tracking-[-0.01em]">{about.photo.caption}</figcaption>
+                <figcaption className="mt-3 font-display text-[length:max(0.875rem,calc(1.1rem*var(--type-scale)))] font-semibold tracking-[-0.01em]">{about.photo.caption}</figcaption>
               </figure>
             </Reveal>
           </div>
@@ -55,11 +55,11 @@ export default function AboutPage() {
               <ScrollRead text={about.pairsHeading} />
             </h2>
             <div aria-hidden className="mt-12 hidden grid-cols-[1fr_7rem_1fr] gap-6 border-b border-paper-line pb-4 md:grid">
-              <p className="font-display text-[length:calc(1.25rem*var(--type-scale))] font-semibold">
+              <p className="font-display text-[length:max(0.875rem,calc(1.25rem*var(--type-scale)))] font-semibold">
                 {about.mission.title} <span className="text-mute-light">· {about.today}</span>
               </p>
               <span />
-              <p className="font-display text-[length:calc(1.25rem*var(--type-scale))] font-semibold">
+              <p className="font-display text-[length:max(0.875rem,calc(1.25rem*var(--type-scale)))] font-semibold">
                 {about.vision.title} <span className="text-mute-light">· {about.tomorrow}</span>
               </p>
             </div>
@@ -67,7 +67,7 @@ export default function AboutPage() {
               {about.pairs.map(([m, v], i) => (
                 <li key={i} className="pair grid gap-4 border-b border-paper-line py-8 md:grid-cols-[1fr_7rem_1fr] md:items-center md:gap-6 md:py-10">
                   <div>
-                    <p className="font-display text-[length:calc(1rem*var(--type-scale))] font-semibold text-mute-light md:hidden">
+                    <p className="font-display text-[length:max(0.875rem,calc(1rem*var(--type-scale)))] font-semibold text-mute-light md:hidden">
                       {about.mission.title} · {about.today}
                     </p>
                     <p className="mt-1 max-w-[34ch] text-lead text-ink md:mt-0">{about.mission.items[m]}</p>
@@ -80,10 +80,10 @@ export default function AboutPage() {
                     </span>
                   </span>
                   <div>
-                    <p className="font-display text-[length:calc(1rem*var(--type-scale))] font-semibold text-mute-light md:hidden">
+                    <p className="font-display text-[length:max(0.875rem,calc(1rem*var(--type-scale)))] font-semibold text-mute-light md:hidden">
                       {about.vision.title} · {about.tomorrow}
                     </p>
-                    <p className="mt-1 max-w-[34ch] font-display text-[length:calc(clamp(1.35rem,1rem+1vw,1.75rem)*var(--type-scale))] leading-snug font-semibold tracking-[-0.02em] text-ink md:mt-0">
+                    <p className="mt-1 max-w-[34ch] font-display text-[length:max(0.875rem,calc(clamp(1.35rem,1rem+1vw,1.75rem)*var(--type-scale)))] leading-snug font-semibold tracking-[-0.02em] text-ink md:mt-0">
                       {about.vision.items[v]}
                     </p>
                   </div>
@@ -109,7 +109,7 @@ export default function AboutPage() {
                         <img src={f.photo.src} alt={f.name} width={f.photo.width} height={f.photo.height} className="block aspect-square w-full object-cover object-top" />
                       </div>
                       {f.knownAs && (
-                        <span className="absolute -top-6 -right-6 grid size-[5.5rem] rotate-[12deg] place-items-center rounded-full border-[2.5px] border-ink bg-signal p-2 text-center font-display text-[length:calc(0.95rem*var(--type-scale))] leading-[1.12] font-bold text-signal-ink">
+                        <span className="absolute -top-6 -right-6 grid size-[5.5rem] rotate-[12deg] place-items-center rounded-full border-[2.5px] border-ink bg-signal p-2 text-center font-display text-[length:max(0.875rem,calc(0.95rem*var(--type-scale)))] leading-[1.12] font-bold text-signal-ink">
                           {f.knownAs}
                         </span>
                       )}

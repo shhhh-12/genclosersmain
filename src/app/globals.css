@@ -31,12 +31,12 @@
      the components use it too. Heading line heights opened up so descenders never touch the next line. */
   --text-label: 0.75rem;
   --text-label--letter-spacing: 0.14em;
-  --text-small: calc(0.9375rem * var(--type-scale));
-  --text-body: calc(clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem) * var(--type-scale));
-  --text-body--line-height: 1.6;
-  --text-lead: calc(clamp(1.25rem, 1.1rem + 0.6vw, 1.625rem) * var(--type-scale));
-  --text-lead--line-height: 1.45;
-  --text-h3: calc(clamp(1.5rem, 1.3rem + 0.9vw, 2.125rem) * var(--type-scale));
+  --text-small: max(0.8125rem, calc(0.9375rem * var(--type-scale))); /* never under 13px */
+  --text-body: max(0.9375rem, calc(clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem) * var(--type-scale))); /* never under 15px */
+  --text-body--line-height: 1.7;
+  --text-lead: max(1rem, calc(clamp(1.25rem, 1.1rem + 0.6vw, 1.625rem) * var(--type-scale))); /* never under 16px */
+  --text-lead--line-height: 1.6;
+  --text-h3: max(1.125rem, calc(clamp(1.5rem, 1.3rem + 0.9vw, 2.125rem) * var(--type-scale)));
   --text-h3--line-height: 1.2;
   --text-h2: calc(clamp(2.25rem, 1.6rem + 2.8vw, 4.25rem) * var(--type-scale));
   --text-h2--line-height: 1.1;
@@ -74,8 +74,8 @@
   --stagger: 70ms;
 
   /* Spacing rhythm for sections */
-  --gutter: clamp(1rem, 0.6rem + 1.8vw, 2.5rem);
-  --section-y: clamp(3.5rem, 2.5rem + 4vw, 7rem);
+  --gutter: clamp(1.25rem, 0.5rem + 3.2vw, 4.5rem); /* owner 2026-11-19: more spacious (was 1rem..2.5rem) */
+  --section-y: clamp(4.5rem, 2.75rem + 6.5vw, 10rem); /* was 3.5rem..7rem */
 
   color-scheme: dark;
 }
@@ -92,7 +92,7 @@ body {
   overflow-x: clip;
   font-family: var(--font-body);
   font-size: var(--text-body);
-  line-height: 1.6;
+  line-height: 1.7;
   font-weight: 400;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -926,8 +926,13 @@ html {
   .proof-burst { display: none; }
 }
 
+/* reading text at the smaller scale: a hair of tracking so it breathes */
+body {
+  letter-spacing: 0.006em;
+}
+
 :root {
-  --type-scale: 0.9; /* one knob for every text size on the site */
+  --type-scale: 0.63; /* one knob for every text size on the site (owner 2026-11-19: 0.9, then 30% smaller) */
 }
 
 /* headings: a touch of air between words (the tight tracking also tightens the spaces) */

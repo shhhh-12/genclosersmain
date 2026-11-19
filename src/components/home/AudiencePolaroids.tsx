@@ -146,9 +146,9 @@ export function AudiencePolaroids({ items, sticker, dragHint }: { items: readonl
                     {ART[i % ART.length]}
                   </svg>
                 </div>
-                <h3 className="mt-3 font-display text-[length:calc(1.35rem*var(--type-scale))] leading-tight font-semibold tracking-[-0.02em]">{item.title}</h3>
+                <h3 className="mt-3 font-display text-[length:max(0.875rem,calc(1.35rem*var(--type-scale)))] leading-tight font-semibold tracking-[-0.02em]">{item.title}</h3>
                 <p className="mt-1.5 text-small leading-snug text-mute-light">{item.body}</p>
-                <span aria-hidden className="pol-sticker absolute -top-4 -right-4 grid h-[74px] w-[74px] place-items-center rounded-full border-[2.5px] border-ink bg-signal text-center font-display text-[length:calc(0.95rem*var(--type-scale))] leading-[1.12] font-bold text-signal-ink">
+                <span aria-hidden className="pol-sticker absolute -top-4 -right-4 grid h-[74px] w-[74px] place-items-center rounded-full border-[2.5px] border-ink bg-signal text-center font-display text-[length:max(0.875rem,calc(0.95rem*var(--type-scale)))] leading-[1.12] font-bold text-signal-ink">
                   {sticker}
                 </span>
               </div>

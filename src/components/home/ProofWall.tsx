@@ -174,7 +174,7 @@ export function ProofWall({ heading, sub, dragHint, youtube, instagram, copy, it
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={it.src} alt={it.alt} width={it.width} height={it.height} loading="lazy" draggable={false} className="block h-auto w-full rounded-[3px] border border-ink/15" />
                   <figcaption className="mt-3 flex items-center justify-between gap-3">
-                    {photo ? <span className="font-display text-[length:calc(1.05rem*var(--type-scale))] font-semibold tracking-[-0.01em]">{copy.workshop}</span> : <span />}
+                    {photo ? <span className="font-display text-[length:max(0.875rem,calc(1.05rem*var(--type-scale)))] font-semibold tracking-[-0.01em]">{copy.workshop}</span> : <span />}
                     <span className={`transition-colors ${isLiked ? "text-signal" : "text-ink/45"}`}>
                       <Heart className="size-5" filled={isLiked} />
                       <span className="sr-only">{isLiked ? copy.liked : copy.like}</span>

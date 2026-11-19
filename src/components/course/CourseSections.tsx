@@ -223,7 +223,7 @@ export function Outcomes({ course }: { course: Course }) {
             <Reveal as="li" key={item} delay={(i % 3) * 0.06} className="group relative flex gap-4 border-t border-ink-line py-5">
               <HoverLine />
               <span className="font-mono text-small text-signal">{n2(i + 1)}</span>
-              <span className="font-display text-[length:calc(1.1875rem*var(--type-scale))] leading-snug font-medium transition-colors group-hover:text-paper">{item}</span>
+              <span className="font-display text-[length:max(0.875rem,calc(1.1875rem*var(--type-scale)))] leading-snug font-medium transition-colors group-hover:text-paper">{item}</span>
             </Reveal>
           ))}
         </ol>
@@ -260,7 +260,7 @@ export function Faqs({ course }: { course: Course }) {
           {q.items.map((item) => (
             <AccordionItem
               key={item.q}
-              head={<span className="font-display text-[length:calc(1.25rem*var(--type-scale))] font-semibold tracking-[-0.01em] transition-colors group-hover:text-signal-deep">{item.q}</span>}
+              head={<span className="font-display text-[length:max(0.875rem,calc(1.25rem*var(--type-scale)))] font-semibold tracking-[-0.01em] transition-colors group-hover:text-signal-deep">{item.q}</span>}
             >
               <p className="max-w-[60ch] text-mute-light">
                 <Txt>{item.a}</Txt>
@@ -282,7 +282,7 @@ export function Apply({ course }: { course: Course }) {
             <h2 className="sr-only">{applicationForm.heading}</h2>
             {/* "You can do it." with the salesman leaning his forearm on the top line (sizes in em, so they scale together) */}
             <Reveal>
-              <p aria-label={applicationForm.cheer.join(" ")} className="relative pt-[0.75em] pb-[0.4em] font-display text-[length:calc(clamp(3.2rem,8vw,8rem)*var(--type-scale))] leading-[1] font-semibold tracking-[-0.04em]">
+              <p aria-label={applicationForm.cheer.join(" ")} className="relative pt-[0.75em] pb-[0.4em] font-display text-[length:max(0.875rem,calc(clamp(3.2rem,8vw,8rem)*var(--type-scale)))] leading-[1] font-semibold tracking-[-0.04em]">
                 <span aria-hidden className="relative inline-block">
                   {applicationForm.cheer[0]}
                   {/* eslint-disable-next-line @next/next/no-img-element */}

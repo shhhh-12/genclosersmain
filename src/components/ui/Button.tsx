@@ -14,8 +14,8 @@ const variants: Record<Variant, string> = {
 };
 
 const sizes = {
-  md: "h-12 px-6 text-[length:calc(1rem*var(--type-scale))]",
-  lg: "h-15 px-8 text-[length:calc(1.125rem*var(--type-scale))]",
+  md: "h-12 px-6 text-[length:max(0.875rem,calc(1rem*var(--type-scale)))]",
+  lg: "h-15 px-8 text-[length:max(0.875rem,calc(1.125rem*var(--type-scale)))]",
 };
 
 type Props = {
