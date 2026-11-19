@@ -6,7 +6,8 @@
  * Phones: a swipeable row, no dragging. Same comic-ink look as the home story.
  */
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
+import { usePolaroidDrag } from "@/lib/usePolaroidDrag";
 import type { Card } from "@/content/types";
 
 const INK = "#151313";
@@ -69,61 +70,7 @@ const SPOTS = [
 export function AudiencePolaroids({ items, sticker, dragHint }: { items: readonly Card[]; sticker: string; dragHint: string }) {
   const ref = useRef<HTMLUListElement>(null);
 
-  useEffect(() => {
-    const table = ref.current;
-    if (!table || !window.matchMedia("(min-width: 1024px) and (hover: hover) and (pointer: fine)").matches) return;
-    const cards = Array.from(table.querySelectorAll<HTMLElement>("[data-pol]"));
-    let z = 10;
-    const offs = cards.map(() => ({ x: 0, y: 0 }));
-    const cleanups = cards.map((card, i) => {
-      let sx = 0, sy = 0, ox = 0, oy = 0, drag = false;
-      const down = (e: PointerEvent) => {
-        drag = true;
-        card.setPointerCapture(e.pointerId);
-        sx = e.clientX;
-        sy = e.clientY;
-        ox = offs[i].x;
-        oy = offs[i].y;
-        card.style.zIndex = String(++z);
-        card.classList.add("is-grabbed");
-      };
-      const move = (e: PointerEvent) => {
-        if (!drag) return;
-        const tr = table.getBoundingClientRect();
-        const cr = card.getBoundingClientRect();
-        // keep the card on the table
-        const nx = ox + e.clientX - sx;
-        const ny = oy + e.clientY - sy;
-        const dx = nx - offs[i].x;
-        const dy = ny - offs[i].y;
-        const cx = Math.min(Math.max(dx, tr.left - cr.left - 20), tr.right - cr.right + 20);
-        const cy = Math.min(Math.max(dy, tr.top - cr.top - 20), tr.bottom - cr.bottom + 20);
-        offs[i].x += cx;
-        offs[i].y += cy;
-        card.style.setProperty("--dx", `${offs[i].x}px`);
-        card.style.setProperty("--dy", `${offs[i].y}px`);
-      };
-      const up = () => {
-        drag = false;
-        card.classList.remove("is-grabbed");
-      };
-      card.addEventListener("pointerdown", down);
-      card.addEventListener("pointermove", move);
-      card.addEventListener("pointerup", up);
-      card.addEventListener("pointercancel", up);
-      return () => {
-        card.removeEventListener("pointerdown", down);
-        card.removeEventListener("pointermove", move);
-        card.removeEventListener("pointerup", up);
-        card.removeEventListener("pointercancel", up);
-      };
-    });
-    table.classList.add("is-live");
-    return () => {
-      cleanups.forEach((c) => c());
-      table.classList.remove("is-live");
-    };
-  }, []);
+  usePolaroidDrag(ref);
 
   return (
     <div>
@@ -153,7 +100,7 @@ export function AudiencePolaroids({ items, sticker, dragHint }: { items: readonl
           );
         })}
       </ul>
-      <p className="eyebrow mt-4 hidden text-mute-dark lg:block">{dragHint}</p>
+      <p className="eyebrow mt-4 hidden text-mute-light lg:block">{dragHint}</p>
     </div>
   );
 }

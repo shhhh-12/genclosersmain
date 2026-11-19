@@ -2,7 +2,7 @@
 
 /**
  * Home hero: a short story about what sales really is (from the founder's workshop notes).
- * No course selling in the hero. Desktop only (phones get LogoScrollHero).
+ * No course selling in the hero.
  *
  *  OPEN     the intro closes on ink; the salesman pushes the ink away like a curtain: the café.
  *  1 PUSH   a stranger barges in, points: "Buy my fat loss program!". She bristles: "I don't need
@@ -12,24 +12,27 @@
  *  4 FRIEND "When can I start?", a handshake; they leave together and he drags the ink curtain
  *           closed, which becomes the About section.
  *
- * Comic-ink style (lib/inkRig.ts): side-view characters on a skeleton, so walking, sitting,
- * nodding, crossing arms and the handshake are joint motion. One SVG world; the camera is the
- * viewBox. A tall section with a sticky stage; ONE damped progress number drives everything
- * (lib/scrollScene.ts), so scrolling back plays the exact reverse (the walk too).
+ * Hand-drawn frames (lib/spriteCast.ts). One SVG world; the camera is the viewBox. Every visual is a
+ * pure function of the story progress c (render).
+ *
+ * ON DEMAND (owner 2026-11-19): scrolling never plays the story. The hero is one screen: the still
+ * café with the main text, and a red dot on the empty chair ("Hold to have a seat"). Holding it for
+ * HOLD_SECONDS plays the story like a short film (scroll locked): it moves on by itself, waiting a
+ * moment on each line (STOPS); a tap / click / → / Space skips ahead, Esc or Close stops it. At the
+ * end he drags the curtain closed (the About card reads itself), then the page glides on to the
+ * next section and the café quietly resets ("Hold to watch again").
  */
 
-import { Fragment, useEffect, useRef, useState } from "react";
-import { getLenis } from "@/lib/scroll";
+import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
+import { getLenis, lockScroll } from "@/lib/scroll";
 import Link from "next/link";
 import { Arrow } from "@/components/ui/Icons";
-import { createScrollScene, seg, lerp, clamp01, easeOut, easeInOut } from "@/lib/scrollScene";
-import { LockupInner } from "@/components/wheel/BrandLockup";
+import { LogoMark } from "@/components/brand/LogoMark";
+import { seg, lerp, clamp01, easeOut, easeInOut } from "@/lib/scrollScene";
 import { useMotionAllowed } from "@/lib/useMotionAllowed";
 import { TONES } from "@/lib/tones";
-import { RIG2_DEFS } from "@/lib/inkRig2";
 import { Sprite, cycleFrame, castFrames } from "@/lib/spriteCast";
 import CAST from "@/lib/heroCast.json";
-import { createBrandPuppet, type BrandPuppet } from "@/lib/brandPuppet";
 
 type Line = { text: string; accent?: string };
 type Bubbles = Record<"push" | "react" | "ask" | "listen" | "want" | "why" | "health" | "why2" | "kids" | "start", string>;
@@ -37,7 +40,6 @@ type Bubbles = Record<"push" | "react" | "ask" | "listen" | "want" | "why" | "he
 // ---------- palette ----------
 const PAPER = "#f3f1ec";
 const INK = "#151313";
-const CURTAIN = "#0c0b0b"; // same as the page's ink, so the curtain becomes the About section
 const WHITE = "#ffffff";
 const RED = "#e3101b";
 const SUN = TONES[0];
@@ -89,13 +91,6 @@ const LINE_AT: readonly (readonly [number, number])[] = [
   [0.79, 0.865],
   [0.935, 0.982], // gone before the curtain reaches it
 ];
-// The opening push, timed like the reference loader: three shoves with holds, then a run-off.
-// [progress reached, move seconds, hold seconds]; progress 1 = the curtain's edge at the right of the screen.
-const SHOVES: readonly [number, number, number][] = [
-  [0.3, 0.65, 0.16],
-  [0.6, 0.72, 0.2],
-  [1.28, 1.46, 0],
-];
 // Café depth: halftone cast shadows, warm wall/floor tones, golden window light (owner, 2026-11-09)
 const CAFE_DEFS = `
 <pattern id="cast-shadow" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)" stroke="none"><circle cx="2.5" cy="2.5" r="1.5" fill="#151313" fill-opacity="0.55"/></pattern>
@@ -111,24 +106,39 @@ const LAMP_H = 236; // the drawn lamp, cord top to bulb
 const LAMP_BOTTOM = 600;
 const LAMP_RIM = LAMP_BOTTOM - LAMP_H * 0.13; // the shade's lower rim in the drawing
 const LAMPS = [460, 700, 940]; // all three inside the opening frame, clear of the day/night switch
-const BOOT_SECONDS = SHOVES.reduce((n, s) => n + s[1] + s[2], 0);
-// Phones: each tap plays on to the next moment like a video (story progress c, then the About card = 1)
-const STOPS = [0.213, 0.284, 0.398, 0.497, 0.6, 0.75, 0.8365, 0.964, 1];
-const PLAY_SPEED = 0.035; // story progress per second while playing (the whole story in about 28 s)
-const IDLE_FIRST = 5; // first screen: seconds after he starts typing before the scroll / tap reminder
-const IDLE_STUCK = 3; // mid-story: seconds without input before it comes back
-const PULL_AT = 0.972; // the ending: from here the curtain pull plays by itself
-const sineInOut = (x: number) => -(Math.cos(Math.PI * x) - 1) / 2;
+// The film never stops dead (owner 2026-11-19: waits felt stuck): it eases down to SLOW around each of
+// these moments (a line or a bubble fully on screen) so it can be read, then eases back up.
+const STOPS = [0.213, 0.284, 0.398, 0.497, 0.6, 0.75, 0.8365, 0.964];
+const PLAY_SPEED = 0.042; // story progress per second at full speed
+const SLOW = 0.3; // speed near a stop (fraction of full)
+const SLOW_NEAR = 0.03; // how close to a stop the slow-down reaches (story progress)
+const SKIP_SPEED = 6; // a tap plays on to the next stop this many times faster
+const HOLD_SECONDS = 0.8; // hold the chair this long to start (owner 2026-11-19: shorter)
+// scrolling or swiping during the film takes over: the story follows the scroll (like the old scroll story)
+const WHEEL_STORY = 1 / 5200; // story progress per wheel pixel
+const TOUCH_STORY = 1 / 2600; // per pixel of finger travel
+const SWIPE_CLOSE = 80; // phones: a swipe right this long closes the film
+const smooth01 = (x: number) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
+const END_BEAT = 0.35; // a beat once the curtain is closed, then the page sits on "Start here"
+// The ending (owner 2026-11-19): he drags a curtain closed and the curtain IS the "Start here" section.
+// Three pulls with short holds, then a run-off: [progress reached, move seconds, hold seconds].
+const PULLS: readonly [number, number, number][] = [
+  [0.3, 0.65, 0.16],
+  [0.6, 0.72, 0.2],
+  [1.28, 1.46, 0],
+];
+const PULL_SECONDS = PULLS.reduce((n, s) => n + s[1] + s[2], 0);
+const PULL_AT = 0.972; // story progress where the pull starts (they have walked off)
 const power2InOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
-/** Push progress after `sec` seconds, and whether he is holding (catching his breath). */
-function shoveAt(sec: number) {
+/** Curtain progress after `sec` seconds, and whether he is holding (catching his breath). */
+function pullAt(sec: number) {
   let t = sec;
   let from = 0;
-  for (let i = 0; i < SHOVES.length; i++) {
-    const [to, move, hold] = SHOVES[i];
+  for (let i = 0; i < PULLS.length; i++) {
+    const [to, move, hold] = PULLS[i];
     if (t <= move) {
       const u = clamp01(t / move);
-      const e = i === SHOVES.length - 1 ? u * u * u : power2InOut(u);
+      const e = i === PULLS.length - 1 ? u * u * u : power2InOut(u);
       return { p: lerp(from, to, e), hold: -1 };
     }
     t -= move;
@@ -136,13 +146,16 @@ function shoveAt(sec: number) {
     t -= hold;
     from = to;
   }
-  return { p: SHOVES[SHOVES.length - 1][0], hold: -1 };
+  return { p: PULLS[PULLS.length - 1][0], hold: -1 };
 }
-/** Comic pop on twos (12 fps): small → overshoot → settle. */
+/** Comic pop on twos (12 fps): small, overshoot, settle. */
 const popStep = (sec: number) => {
   const st = Math.floor(sec * 12);
   return st <= 0 ? 0.55 : st === 1 ? 1.15 : 1;
 };
+// the red dot on the empty chair's seat (world units)
+const SEAT_X = 955;
+const SEAT_Y = 1050;
 
 const pop = (s: number) => easeOut(s);
 const READ_WINDOW = 5; // letters lit red at once (same as ScrollRead)
@@ -171,7 +184,7 @@ function shieldPath(cx: number, cy: number, rx: number, ry: number, spike: numbe
 }
 
 /** A comic speech balloon with white hand-lettered words: red for the salesman, ink for the customer. */
-function Bubble({ x, y, text, who = "person", tail = "d", cls, size = 26 }: { x: number; y: number; text: string; who?: "stranger" | "person"; tail?: "l" | "r" | "d"; cls?: string; size?: number }) {
+function Bubble({ x, nx, y, text, who = "person", tail = "d", cls, size = 26 }: { x: number; /** phones: a different x so it stays on screen */ nx?: number; y: number; text: string; who?: "stranger" | "person"; tail?: "l" | "r" | "d"; cls?: string; size?: number }) {
   const w = Math.max(90, text.length * size * 0.56 + 48);
   const h = size + 32;
   const x0 = -w / 2, x1 = w / 2, y0 = -h / 2, y1 = h / 2, r = 14;
@@ -181,7 +194,7 @@ function Bubble({ x, y, text, who = "person", tail = "d", cls, size = 26 }: { x:
   const card = who === "stranger" ? RED : INK;
   const ink = WHITE;
   return (
-    <g className={`${cls ?? ""} who-${who}`} data-x={x} data-y={y} transform={`translate(${x} ${y}) scale(0.94)`} style={{ opacity: 0 }}>
+    <g className={`${cls ?? ""} who-${who}`} data-x={x} data-nx={nx ?? x} data-y={y} transform={`translate(${x} ${y}) scale(0.94)`} style={{ opacity: 0 }}>
       <path d={d} fill={card} stroke={INK} strokeWidth={4} />
       <text x="0" y={size * 0.38} textAnchor="middle" fontFamily="var(--font-hand)" fontSize={size * 1.18} fill={ink} stroke="none">
         {text}
@@ -232,29 +245,6 @@ function Accent({ line }: { line: Line }) {
 }
 
 /** The About heading as letters (thick and thin like the page), so the red reading highlight can pass through. */
-function AboutHeading({ text, heavy }: { text: string; heavy?: string }) {
-  const at = heavy ? text.indexOf(heavy) : -1;
-  const words = text.split(" ");
-  const starts = words.map((_, w) => words.slice(0, w).reduce((n, x) => n + x.length + 1, 0));
-  const weight = (w: number) => (at < 0 ? "" : starts[w] < at + heavy!.length && starts[w] + words[w].length > at ? "font-bold" : "font-light");
-  let idx = 0;
-  return (
-    <span className="scroll-read fs-about-read" aria-label={text} role="text">
-      {words.map((word, w) => (
-        <Fragment key={w}>
-          <span aria-hidden className={`inline-block whitespace-nowrap ${weight(w)}`}>
-            {word.split("").map((ch) => (
-              <span key={idx} data-c={idx++} data-s="0">
-                {ch}
-              </span>
-            ))}
-          </span>
-          {w < words.length - 1 ? " " : null}
-        </Fragment>
-      ))}
-    </span>
-  );
-}
 
 // the melted shield rises as sparkles over the head
 const SPARKS = Array.from({ length: 10 }, (_, i) => ({ a: -Math.PI * 0.88 + (i / 9) * Math.PI * 0.76, r: 170 + (i % 2) * 30 }));
@@ -265,26 +255,31 @@ export function FriendStory({
   rewind,
   coffee,
   eyebrows,
-  scrollHint,
-  skip,
-  idle,
+  lead,
+  seat,
+  reveal,
+  card,
   night: nightCopy,
-  about,
 }: {
   lines: readonly Line[];
   bubbles: Bubbles;
   rewind: string;
   coffee: string;
   eyebrows: readonly string[];
-  scrollHint: { text: string; tapText: string; accent: string };
-  skip: string;
-  idle: { scroll: string; tap: string };
+  /** The first screen's main text (visible at once). */
+  lead: { heading: string; accent?: string; body: string; link?: { href: string; label: string } };
+  /** The chair: hold to play the story. */
+  seat: { hold: string; again: string; label: string; close: string; hintDesktop: string; hintPhone: string };
+  /** What the curtain he drags closed shows: the section right below (so the swap is seamless). */
+  reveal?: ReactNode;
+  /** The title card he shoves away when the film starts. */
+  card: { title: string; accent?: string; sub: string };
   night: { toNight: string; toDay: string; label: string };
-  about: { heading: string; heavy?: string; body: string; link?: { href: string; label: string } };
 }) {
   const section = useRef<HTMLElement>(null);
   const motion = useMotionAllowed();
   const [night, setNight] = useState(false);
+  const [watched, setWatched] = useState(false); // the chair says "watch again" after a full story
 
   useEffect(() => {
     const sec = section.current;
@@ -295,10 +290,10 @@ export function FriendStory({
     // ---- the cast: hand-drawn frames (lib/spriteCast.ts) ----
     const SALES_ALL = [...castFrames("sales_walk_push_"), ...castFrames("sales_acting_")];
     const sales = new Sprite(q<SVGGElement>(".slot-sales"), SALES_ALL);
-    const hauler = new Sprite(q<SVGGElement>(".slot-top"), [...castFrames("sales_walk_push_"), ...castFrames("sales_pull_")]);
     const cust = new Sprite(q<SVGGElement>(".slot-customer"), castFrames("cust_"));
     const pair = new Sprite(q<SVGGElement>(".slot-sales"), castFrames("handshake_"));
-    const sprites = [sales, hauler, cust, pair];
+    const hauler = new Sprite(q<SVGGElement>(".slot-top"), [...castFrames("sales_walk_push_"), ...castFrames("sales_pull_")]);
+    const sprites = [sales, cust, pair, hauler];
 
     if (!motion) {
       // Reduced motion: the warm ending, still
@@ -311,34 +306,32 @@ export function FriendStory({
     const svg = q<SVGSVGElement>(".fs-front");
     const svgBack = q<SVGSVGElement>(".fs-back");
     const svgTop = q<SVGSVGElement>(".fs-top");
-    const aboutCard = q<HTMLElement>(".fs-about");
+    const curtainEl = q<HTMLElement>(".fs-reveal");
+    const effortFx = q<SVGGElement>(".fs-effort");
+    let pull = 0; // seconds into the ending curtain pull
+    let open = 0; // seconds into the opening shove (the title card), 0 = not started
+    const cardEl = q<HTMLElement>(".fs-card");
     const dayNight = q<HTMLElement>(".fs-daynight");
-    const card = q<HTMLElement>(".fs-card");
-    const aboutChars = qa<HTMLElement>(".fs-about-read [data-c]");
-    const aboutState = aboutChars.map(() => -1);
     const lampEls = qa<SVGGElement>(".fs-lamp");
     const lamps = LAMPS.map(() => ({ a: 0, w: 0 }));
     const view = { l: 0, t: 0, w: 1, h: 1 };
     const shieldWrap = q<SVGGElement>(".p-shieldwrap");
     const cam = q<SVGGElement>(".fs-cam");
     const tape = q<HTMLElement>(".fs-rewind");
-    const curtain = q<SVGRectElement>(".fs-curtain");
     const lineEls = qa<HTMLElement>(".fs-line");
     const set = (el: Element | null, tf: string) => el?.setAttribute("transform", tf);
     const showBubble = (el: SVGGElement, s: number, out = 1) => {
       const e = pop(s) * out;
       el.style.opacity = e.toFixed(3);
-      set(el, `translate(${el.getAttribute("data-x")} ${el.getAttribute("data-y")}) scale(${((0.94 + 0.06 * e) * (narrow ? 0.9 : 1)).toFixed(4)})`);
+      set(el, `translate(${el.getAttribute(narrow ? "data-nx" : "data-x")} ${el.getAttribute("data-y")}) scale(${((0.94 + 0.06 * e) * (narrow ? 0.9 : 1)).toFixed(4)})`);
     };
-    const hint = q<HTMLElement>(".fs-hint");
+    const leadEl = q<HTMLElement>(".fs-lead");
     const scrim = q<HTMLElement>(".fs-scrim");
-    const skipBtn = q<HTMLButtonElement>(".fs-skip");
-    const idleEl = q<HTMLElement>(".fs-idle");
+    const seatBtn = q<HTMLButtonElement>(".fs-seat");
+    const seatRing = q<SVGCircleElement>(".fs-seat-fill");
+    const closeBtn = q<HTMLButtonElement>(".fs-close");
     let lineSolid: number[] = [];
-    let hintSolid = 0;
-    const effortFx = q<SVGGElement>(".fs-effort");
-    let boot = 0;
-    let bootStart = -1;
+    let leadSolid = 0;
     const readChars = lineEls.map((el) => Array.from(el.querySelectorAll<HTMLElement>("[data-c]")));
     const readState = readChars.map((cs) => new Array<number>(cs.length).fill(-1));
 
@@ -357,28 +350,20 @@ export function FriendStory({
 
     let W = 1, H = 1, B = 1;
     let narrow = false;
-    let coverAt = 0.85;
-    let storyAt = 0.75; // the story ends here; the rest before coverAt is the About card reading itself
-    let lastP = 0;
     let lastC = 0;
     let t = 0;
-    let pull = 0; // seconds into the automatic ending (the curtain pull), timed like the opening
-    let typingAt = -1; // when the opening push finished and he sits typing
-    let readAfterPull = false; // Skip story: read the About heading once the curtain is closed
-    let playing = false; // a tap is playing the story on to the next stop
-    let playTo = -1;
-    let lastInput = 0;
-    let idleOn = false;
+    // the film
+    let mode: "idle" | "film" | "leaving" = "idle";
+    let hold = 0; // 0..1 while the chair is held
+    let holding = false;
+    let film = 0; // story progress c while the film plays
+    let skipping = false; // a tap: play on fast to the next stop
+    let scrub = false; // the user scrolled: the scroll drives the story now
+    let scrubTo = 0;
+    let endBeat = 0;
+    let modeShown = "";
     let scrimSolid = 0;
     const par = { x: 0, y: 0, tx: 0, ty: 0 };
-
-    // Brand partner's pushing character (public/brand/huy/push.json). Absent -> the code salesman pushes.
-    let brand: BrandPuppet | null = null;
-    let dead = false;
-    createBrandPuppet(q<SVGGElement>(".slot-top"), new URLSearchParams(window.location.search).has("brandDebug")).then((bp) => {
-      if (dead) bp?.destroy();
-      else brand = bp;
-    });
 
     const measure = () => {
       W = Math.max(1, stage.clientWidth); // a hidden stage measures 0: never divide by it
@@ -387,18 +372,12 @@ export function FriendStory({
       // phones: a closer frame, the scene above the words (which sit at the bottom)
       B = narrow ? Math.min(W / 560, H / 700) : Math.min(W / 1200, H / 820);
       const vh = window.innerHeight;
-      const range = Math.max(1, sec.offsetHeight - vh);
-      coverAt = Math.max(0.5, (range - vh) / range);
-      // the About card gets most of a screen of scroll to itself before the next section slides over it
-      storyAt = coverAt - Math.min(0.14, (0.9 * vh) / range);
       // phones: how far up from the bottom each line reaches (the light fade behind the words covers it)
       lineSolid = lineEls.map((el) => el.offsetHeight + 0.09 * vh + 36);
-      hintSolid = hint.offsetHeight + 0.09 * vh + 36;
+      leadSolid = leadEl.offsetHeight + 0.06 * vh + 36;
     };
 
-    const render = (p: number) => {
-      lastP = p;
-      const c = clamp01(p / storyAt);
+    const render = (c: number) => {
       lastC = c;
 
       // ---- camera: subject right of centre (the words live on the left) ----
@@ -423,88 +402,57 @@ export function FriendStory({
       view.h = vhh;
       set(cam, `rotate(${k.r.toFixed(3)} ${k.x.toFixed(1)} ${k.y.toFixed(1)})`);
 
-      // ---- the ink curtain: pushed away at the start, dragged closed at the end ----
-      let edge = viewR + 900; // off to the right: no curtain
-      let haulKind: "push" | "pull" | null = null;
-      let brandPushing = false;
-      let effort = -1; // seconds into a hold (the effort marks pop), or -1
-      if (boot < 1) {
-        const sh = shoveAt(boot * BOOT_SECONDS);
+      // ---- the ending: he drags the curtain in from the right; the curtain is "Start here" ----
+      const pushing = open > 0 && open < PULL_SECONDS;
+      const pulling = pull > 0;
+      let edge = viewR + 900;
+      let effort = -1;
+      if (pushing) {
+        // the opening: the title card covers the café and he shoves it off to the right (three shoves, then a run-off)
+        const sh = pullAt(open);
         effort = sh.hold;
-        // his steps are picked by how far the curtain has moved, so he freezes in the holds
         edge = viewL - 4 + sh.p * (viewR - viewL + 8);
-        haulKind = "push";
-        if (brand) {
-          brandPushing = true;
-          brand.update(edge, FLOOR, edge - (viewL - 4));
-        }
-      } else if (pull > 0) {
-        // the ending plays by itself, with the opening push's timing (three pulls, holds, run-off)
-        const sh = shoveAt(pull);
+        cardEl.style.display = "";
+        cardEl.style.transform = `translate3d(${(((edge - viewL) / vw) * W).toFixed(1)}px, 0, 0)`;
+        hauler.show(cycleFrame("sales_walk_push_", edge, 6, 6, 190), edge - 4, FLOOR, 1, "right");
+      } else cardEl.style.display = "none";
+      if (pulling) {
+        const sh = pullAt(pull);
         effort = sh.hold;
         edge = viewR + 40 - sh.p * (viewR - viewL + 44);
-        haulKind = "pull";
+        curtainEl.style.display = "";
+        curtainEl.style.clipPath = `inset(0 0 0 ${Math.max(0, ((edge - viewL) / vw) * W).toFixed(1)}px)`;
+        hauler.show(cycleFrame("sales_pull_", -edge, 0, 6, 190), edge - 4, FLOOR, 1, "right");
+      } else {
+        curtainEl.style.display = "none";
+        if (!pushing) hauler.show(null);
       }
-      // the opening card is paper with the lockup (HTML, moved in screen px); the ink curtain is only the ending
-      curtain.setAttribute("x", haulKind === "push" ? "99999" : edge.toFixed(1));
-      if (haulKind === "push") {
-        card.style.display = "";
-        card.style.transform = `translate3d(${(((edge - viewL) / vw) * W).toFixed(1)}px, 0, 0)`;
-      } else card.style.display = "none";
-      // closing at the end: the curtain is the About card (its words are revealed by the edge)
-      if (haulKind === "pull") {
-        const sx = ((edge - viewL) / vw) * W;
-        aboutCard.style.display = "";
-        aboutCard.style.clipPath = `inset(0 0 0 ${Math.max(0, sx).toFixed(1)}px)`;
-      } else aboutCard.style.display = "none";
-      // its heading reads itself as you scroll on (the same red highlight as every heading on the page)
-      {
-        const rp = seg(p, storyAt, coverAt - (coverAt - storyAt) * 0.2);
-        const front = rp * (aboutChars.length + READ_WINDOW);
-        aboutChars.forEach((ch, i) => {
-          const st = i < front - READ_WINDOW ? 2 : i < front ? 1 : 0;
-          if (st !== aboutState[i]) {
-            aboutState[i] = st;
-            ch.dataset.s = String(st);
-          }
-        });
-      }
-      // the day/night switch belongs to the café: not during the opening push or on the About card
-      // (also hidden during the rewind, where its label would sit on top of it on phones)
-      const dnOn = boot >= 1 && pull === 0 && c < PULL_AT && tri(c, 0.285, 0.35) < 0.05;
-      dayNight.style.opacity = dnOn ? "" : "0";
-      dayNight.style.pointerEvents = dnOn ? "" : "none";
-      // the hauler: hands on the curtain edge, drawn above it
-      if (haulKind && !brandPushing) {
-        const name = haulKind === "push" ? cycleFrame("sales_walk_push_", edge, 6, 6, 190) : cycleFrame("sales_pull_", -edge, 0, 6, 190);
-        hauler.show(name, edge - 4, FLOOR, 1, "right");
-      } else hauler.show(null);
-      if (haulKind && effort >= 0) {
+      if ((pulling || pushing) && effort >= 0) {
         effortFx.style.display = "";
         set(effortFx, `translate(${(edge - 120).toFixed(1)} ${(FLOOR - 430).toFixed(1)}) scale(${popStep(effort).toFixed(2)})`);
       } else effortFx.style.display = "none";
+
+      // the day/night switch belongs to the café; hidden during the rewind (its label would sit on top of it on phones)
+      const dnOn = !pulling && !pushing && tri(c, 0.285, 0.35) < 0.05;
+      dayNight.style.opacity = dnOn ? "" : "0";
+      dayNight.style.pointerEvents = dnOn ? "" : "none";
 
       // ---- rewind wash ----
       const tapeOn = tri(c, 0.285, 0.35);
       tape.style.opacity = tapeOn.toFixed(3);
       tape.classList.toggle("is-on", tapeOn > 0.02);
 
-      // ---- the first screen: there is a story, scroll to play it ----
-      const hinted = easeOut(seg(boot, 0.86, 1)) * (1 - seg(c, 0.012, 0.04));
-      hint.style.opacity = hinted.toFixed(3);
-      hint.style.transform = `translate3d(0, ${((1 - easeOut(seg(boot, 0.86, 1))) * 18 + seg(c, 0.012, 0.04) * -14).toFixed(1)}px, 0)`;
-      // Skip story: on the first screen only, gone once the story starts
-      skipBtn.style.opacity = hinted.toFixed(3);
-      skipBtn.style.pointerEvents = hinted > 0.5 ? "auto" : "none";
-      skipBtn.tabIndex = hinted > 0.5 ? 0 : -1;
-      // still for a while: a small reminder (mouse on desktop, tap on phones)
-      // (first screen: 5 s after he starts typing; later: 3 s without input). CSS fades it in.
-      const quiet = c < 0.012 ? t - Math.max(lastInput, typingAt) > IDLE_FIRST : t - lastInput > IDLE_STUCK;
-      const idleWant = boot >= 1 && typingAt >= 0 && !playing && pull === 0 && c < 0.965 && quiet;
-      if (idleWant !== idleOn) {
-        idleOn = idleWant;
-        idleEl.classList.toggle("is-on", idleOn);
+      // ---- the first screen: the main text and the chair (CSS fades them by mode) ----
+      const hinted = mode === "idle" ? 1 : 0;
+      if (modeShown !== mode) {
+        modeShown = mode;
+        sec.dataset.mode = mode;
+        seatBtn.tabIndex = mode === "idle" ? 0 : -1;
+        closeBtn.tabIndex = mode === "film" ? 0 : -1;
       }
+      // the dot sits on the chair's seat wherever the camera is
+      seatBtn.style.transform = `translate3d(${(((SEAT_X - viewL) / vw) * W).toFixed(1)}px, ${(((SEAT_Y - view.t) / vhh) * H).toFixed(1)}px, 0)`;
+      seatRing.style.strokeDashoffset = (100 - hold * 100).toFixed(2);
 
       // ---- lines ----
       lineEls.forEach((el, i) => {
@@ -530,7 +478,7 @@ export function FriendStory({
       // on phones it grows to cover whichever line is on screen
       scrim.style.opacity = (1 - tapeOn).toFixed(3);
       if (narrow) {
-        let want = hinted > 0.02 ? hintSolid : 0;
+        let want = hinted > 0.02 ? leadSolid : 0;
         lineEls.forEach((el, i) => {
           if (Number(el.style.opacity) > 0.02) want = Math.max(want, lineSolid[i] ?? 0);
         });
@@ -565,8 +513,8 @@ export function FriendStory({
       let cName: string | null = null;
       let cx2 = CUST_X + 64;
       const cFacing: 1 | -1 = 1;
-      if (haulKind) {
-        sName = null; // he is the hauler, drawn above the curtain
+      if (pulling) {
+        sName = null; // he is the one dragging the curtain, drawn above it
       } else if (c >= 0.865) {
         // the ending: standing, a handshake, then they leave together
         const shaking = c > 0.926 && c < 0.952;
@@ -604,8 +552,6 @@ export function FriendStory({
         else if (wIn < 0.985) sName = cycleFrame("sales_walk_push_", sx, 0);
         else sName = "sales_acting_02"; // "Can I sit here?"
       }
-      // he goes above the curtain while hauling it, behind the table otherwise
-      brand?.show(brandPushing);
       sales.show(sName, sx, FLOOR, sFacing);
       pair.show(pairName, 800, FLOOR, 1, "center");
 
@@ -659,15 +605,126 @@ export function FriendStory({
         pt.style.opacity = String(seg(c, 0.936, 0.94) * (1 - seg(c, 0.962, 0.972)));
       });
 
-      // ---- the rest of the page covers the stage ----
-      const cv = easeInOut(seg(p, coverAt, 1));
-      inner.style.transform = cv > 0 ? `scale(${(1 - 0.06 * cv).toFixed(4)})` : "";
-
     };
 
-    const scene = createScrollScene(sec, render, { tau: 45, onMeasure: measure });
-    if (lastP > 0.005) boot = 1; // opened mid-story: no opening push
+    const remeasure = () => {
+      measure();
+      render(lastC);
+    };
+    remeasure();
+    const ro = new ResizeObserver(remeasure);
+    ro.observe(stage);
+    document.fonts?.ready.then(remeasure).catch(() => {});
     sec.classList.add("is-ready");
+
+    // ---- the film ----
+    const reset = () => {
+      mode = "idle";
+      film = 0;
+      skipping = false;
+      scrub = false;
+      endBeat = 0;
+      pull = 0;
+      open = 0;
+      hold = 0;
+      holding = false;
+    };
+    const start = (fromKey = false) => {
+      if (mode !== "idle") return;
+      // the hero fills the screen, then the page holds still while the film plays
+      const top = sec.getBoundingClientRect().top + window.scrollY;
+      const lenis = getLenis();
+      if (lenis) lenis.scrollTo(top, { immediate: true, force: true });
+      else window.scrollTo(0, top);
+      lockScroll(true);
+      // locking can still nudge the layout above (fonts, scrollbars): line the café up again
+      requestAnimationFrame(() => {
+        const t2 = sec.getBoundingClientRect().top + window.scrollY;
+        if (Math.abs(sec.getBoundingClientRect().top) > 1) window.scrollTo(0, t2);
+      });
+      hold = 0;
+      holding = false;
+      mode = "film";
+      film = 0.0001;
+      scrub = false;
+      open = 0.0001; // the title card first
+      cardEl.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: "ease-out" });
+      if (fromKey) closeBtn.focus({ preventScroll: true });
+    };
+    const stop = () => {
+      // Close / Esc: straight back to the still café
+      if (mode !== "film") return;
+      reset();
+      lockScroll(false);
+      inner.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 380, easing: "ease-out" });
+      seatBtn.focus({ preventScroll: true });
+    };
+    const next = () => {
+      // a tap: back to playing by itself, quickly on to the next moment
+      if (mode !== "film") return;
+      if (open < PULL_SECONDS) {
+        open = PULL_SECONDS; // a tap during the opening: straight into the story
+        return;
+      }
+      scrub = false;
+      skipping = true;
+    };
+    const scrubBy = (d: number) => {
+      if (mode !== "film" || open < PULL_SECONDS) return;
+      if (!scrub) scrubTo = film;
+      scrub = true;
+      skipping = false;
+      // scrolled back past the very start: out of the film, the page scrolls on up
+      if (d < 0 && scrubTo <= 0.002) {
+        stop();
+        return;
+      }
+      scrubTo = clamp01(scrubTo + d);
+    };
+    const leave = () => {
+      // the closed curtain looks exactly like "Start here": swap to the real section in place,
+      // then the café resets out of sight
+      mode = "leaving";
+      const y = sec.getBoundingClientRect().top + window.scrollY + sec.offsetHeight;
+      const lenis = getLenis();
+      if (lenis) lenis.scrollTo(y, { immediate: true, force: true });
+      else window.scrollTo(0, y);
+      lockScroll(false);
+      setWatched(true);
+    };
+    // runs every frame from the life loop
+    const tick = (dt: number) => {
+      if (mode === "idle") {
+        hold = holding ? Math.min(1, hold + dt / HOLD_SECONDS) : Math.max(0, hold - dt / (HOLD_SECONDS / 2));
+        if (hold >= 1) {
+          seatBtn.classList.remove("is-taken");
+          void seatBtn.offsetWidth;
+          seatBtn.classList.add("is-taken");
+          start();
+        }
+        return;
+      }
+      if (mode !== "film") return;
+      // the opening shove plays first; the story waits for it
+      if (open < PULL_SECONDS) {
+        open = Math.min(PULL_SECONDS, open + dt);
+        return;
+      }
+      if (scrub) {
+        // the scroll drives it (damped, so wheel steps come out smooth)
+        film += (scrubTo - film) * (1 - Math.exp(-dt / 0.11));
+        if (Math.abs(scrubTo - film) < 2e-4) film = scrubTo;
+      } else if (film < 1) {
+        const was = film;
+        const near = STOPS.reduce((m, st) => Math.min(m, Math.abs(film - st)), 1);
+        const pace = skipping ? SKIP_SPEED : SLOW + (1 - SLOW) * smooth01(near / SLOW_NEAR);
+        film = Math.min(1, film + dt * PLAY_SPEED * pace);
+        if (skipping && STOPS.some((st) => was < st && film >= st)) skipping = false;
+      }
+      // the ending: once they have walked off he drags the curtain closed, then the page sits on "Start here"
+      pull = film >= PULL_AT ? Math.min(PULL_SECONDS, pull + dt) : 0;
+      if (pull >= PULL_SECONDS && (endBeat += dt) >= END_BEAT) leave();
+    };
 
     // The life loop: time (blinks, typing, the opening push), pointer parallax
     let lraf = 0;
@@ -677,28 +734,8 @@ export function FriendStory({
       const dt = Math.min(48, now - llast || 16);
       llast = now;
       t += dt / 1000;
-      // one extra beat on the logo card before he starts pushing (owner 2026-11-10)
-      if (bootStart < 0 && document.documentElement.dataset.intro !== "play") bootStart = t + 1;
-      if (boot < 1 && bootStart >= 0) {
-        // scrolled during the push: let him finish it quickly (4x) so the curtain clears for the story
-        if (lastP > 0.004) bootStart -= (dt / 1000) * 3;
-        boot = clamp01((t - bootStart) / BOOT_SECONDS);
-      }
-      // the ending: once the story reaches it the curtain pull plays by itself; scrolling back reopens it
-      if (boot >= 1 && typingAt < 0) typingAt = t;
-      if (boot >= 1) pull = lastC >= PULL_AT ? Math.min(BOOT_SECONDS, pull + dt / 1000) : Math.max(0, pull - (dt / 1000) * 2);
-      // after Skip story: the curtain has closed, now play the About heading's reading highlight
-      if (readAfterPull && pull >= BOOT_SECONDS) {
-        readAfterPull = false;
-        playing = true;
-        playTo = 1;
-        scrollToY(yAt(aboutP()), 2.8, () => {
-          if (playTo !== 1) return;
-          playing = false;
-          playTo = -1;
-          lastInput = t;
-        });
-      }
+      tick(dt / 1000);
+      // the ending: once the story reaches it the curtain pull plays by itself
       // lamps: damped pendulums (about 2 s a swing)
       const ds = dt / 1000;
       lamps.forEach((lp, i) => {
@@ -708,11 +745,16 @@ export function FriendStory({
       });
       par.x += (par.tx - par.x) * 0.08;
       par.y += (par.ty - par.y) * 0.08;
-      render(lastP);
+      render(mode === "idle" ? 0 : film);
       lraf = visible ? requestAnimationFrame(life) : 0;
     };
     const io = new IntersectionObserver(([e]) => {
       visible = e.isIntersecting;
+      // after the film the page has moved on: the café resets out of sight
+      if (!visible && mode === "leaving") {
+        reset();
+        render(0);
+      }
       if (visible && !lraf) {
         llast = performance.now();
         lraf = requestAnimationFrame(life);
@@ -737,8 +779,8 @@ export function FriendStory({
       lastWX = wx;
       lastMove = now;
       const len = LAMP_BOTTOM - LAMP_PIVOT;
-      // only before the story starts; once it has, a swinging lamp just settles on its own
-      if (lastP > 0.004) return;
+      // only on the still café; once the story plays, a swinging lamp just settles on its own
+      if (mode !== "idle") return;
       lamps.forEach((lp, i) => {
         // where the lamp hangs now: the cord, then the shade near its end
         const u = (wy - LAMP_PIVOT) / len;
@@ -781,100 +823,109 @@ export function FriendStory({
     };
     cupHit.addEventListener("click", onCup);
 
-    // ---- phones: tap to play on; Skip story; the idle reminder ----
-    const yAt = (pp: number) => sec.getBoundingClientRect().top + window.scrollY + pp * Math.max(1, sec.offsetHeight - window.innerHeight);
-    const aboutP = () => coverAt - (coverAt - storyAt) * 0.2; // the About card, its heading read
-    let fallbackRaf = 0;
-    const scrollToY = (y: number, dur: number, done: () => void) => {
-      const lenis = getLenis();
-      if (lenis) {
-        lenis.scrollTo(y, { duration: dur, easing: sineInOut, force: true, onComplete: done });
-        return;
-      }
-      const y0 = window.scrollY;
-      const t0 = performance.now();
-      cancelAnimationFrame(fallbackRaf);
-      const step = (now: number) => {
-        const u = clamp01((now - t0) / (dur * 1000));
-        window.scrollTo(0, lerp(y0, y, sineInOut(u)));
-        if (u < 1) fallbackRaf = requestAnimationFrame(step);
-        else done();
-      };
-      fallbackRaf = requestAnimationFrame(step);
+    // ---- the chair: hold to play; during the film a tap skips ahead, Esc / Close stops it ----
+    const onSeatDown = (e: PointerEvent) => {
+      if (mode !== "idle" || e.button > 0) return;
+      e.preventDefault();
+      seatBtn.setPointerCapture?.(e.pointerId);
+      holding = true;
     };
-    const stopPlaying = () => {
-      if (!playing) return;
-      playing = false;
-      playTo = -1;
-      cancelAnimationFrame(fallbackRaf);
-      getLenis()?.scrollTo(window.scrollY, { immediate: true, force: true });
+    const onSeatUp = () => {
+      holding = false;
     };
-    const playNext = () => {
-      const from = playing && playTo >= 0 ? playTo : lastC;
-      const next = STOPS.find((s) => s > from + 0.004);
-      if (next === undefined) return;
-      playTo = next;
-      playing = true;
-      const dur = Math.max(1.2, (next - lastC) / PLAY_SPEED);
-      scrollToY(yAt(next >= 1 ? aboutP() : next * storyAt), dur, () => {
-        if (playTo !== next) return;
-        playing = false;
-        playTo = -1;
-        lastInput = t;
-      });
+    // keyboard / screen readers can't hold: Enter or Space starts it straight away
+    const onSeatClick = (e: MouseEvent) => {
+      if (e.detail === 0) start(true);
     };
+    const noMenu = (e: Event) => e.preventDefault(); // phones: no long-press menu on the chair
+    seatBtn.addEventListener("pointerdown", onSeatDown);
+    seatBtn.addEventListener("pointerup", onSeatUp);
+    seatBtn.addEventListener("pointercancel", onSeatUp);
+    seatBtn.addEventListener("lostpointercapture", onSeatUp);
+    seatBtn.addEventListener("click", onSeatClick);
+    seatBtn.addEventListener("contextmenu", noMenu);
+
     const onStageTap = (e: MouseEvent) => {
-      if (!narrow || boot < 1) return;
+      if (mode !== "film") return;
       if ((e.target as Element).closest("button, a, .p-hit, .cup-hit")) return;
-      playNext();
+      next();
     };
     stage.addEventListener("click", onStageTap);
-    // a real swipe takes over from the playback
-    window.addEventListener("touchmove", stopPlaying, { passive: true });
-
-    const onSkip = () => {
-      // jump to the end of the story and let him drag the curtain closed (the same ending animation)
-      stopPlaying();
-      boot = 1;
-      pull = 0;
-      readAfterPull = true; // once the curtain is closed, the heading reads itself
-      const y = yAt(storyAt); // the very end of the story: the About heading still unread
-      const lenis = getLenis();
-      if (lenis) lenis.scrollTo(y, { immediate: true, force: true });
-      else window.scrollTo(0, y);
-      scene.remeasure();
+    const onClose = () => stop();
+    closeBtn.addEventListener("click", onClose);
+    const onKey = (e: KeyboardEvent) => {
+      if (mode !== "film") return;
+      if (e.key === "Escape") stop();
+      else if (e.key === "ArrowRight" || e.key === " " || e.key === "Enter") {
+        if (e.target === closeBtn && e.key !== "ArrowRight") return;
+        e.preventDefault();
+        next();
+      }
     };
-    skipBtn.addEventListener("click", onSkip);
-
-    const onInput = () => {
-      if (!playing) lastInput = t;
+    window.addEventListener("keydown", onKey);
+    const onWheel = (e: WheelEvent) => {
+      if (mode !== "film") return;
+      const px = e.deltaMode === 1 ? e.deltaY * 40 : e.deltaMode === 2 ? e.deltaY * window.innerHeight : e.deltaY;
+      scrubBy(px * WHEEL_STORY);
     };
-    const inputs = ["scroll", "wheel", "pointerdown", "keydown", "touchstart"] as const;
-    inputs.forEach((ev) => window.addEventListener(ev, onInput, { passive: true }));
-
-    const html = document.documentElement;
-
-    const mo = new MutationObserver(() => {
-      if (html.dataset.intro !== "play") scene.remeasure();
-    });
-    mo.observe(html, { attributes: true, attributeFilter: ["data-intro"] });
+    window.addEventListener("wheel", onWheel, { passive: true });
+    let tx = 0, ty = 0, tlastY = 0, tMoved = false;
+    const onTouchStart = (e: TouchEvent) => {
+      const p0 = e.touches[0];
+      tx = p0.clientX;
+      ty = tlastY = p0.clientY;
+      tMoved = false;
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (mode !== "film") return;
+      const p0 = e.touches[0];
+      const dx = p0.clientX - tx;
+      const dy = p0.clientY - ty;
+      if (Math.abs(dx) > Math.abs(dy) * 1.5) {
+        // a sideways swipe: to the right closes the film
+        if (dx > SWIPE_CLOSE) {
+          tMoved = true;
+          stop();
+        }
+        return;
+      }
+      if (Math.abs(dy) > 8) tMoved = true;
+      scrubBy((tlastY - p0.clientY) * TOUCH_STORY);
+      tlastY = p0.clientY;
+    };
+    // a real swipe is not a tap
+    const onClickCapture = (e: MouseEvent) => {
+      if (tMoved) {
+        tMoved = false;
+        e.stopPropagation();
+      }
+    };
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
+    stage.addEventListener("click", onClickCapture, true);
 
     return () => {
-      dead = true;
-      brand?.destroy();
-      mo.disconnect();
       io.disconnect();
-      scene.destroy();
+      ro.disconnect();
       cancelAnimationFrame(lraf);
       window.clearTimeout(tapT);
       stage.removeEventListener("pointermove", onMove);
       hit.removeEventListener("click", tap);
       cupHit.removeEventListener("click", onCup);
       stage.removeEventListener("click", onStageTap);
-      skipBtn.removeEventListener("click", onSkip);
-      window.removeEventListener("touchmove", stopPlaying);
-      inputs.forEach((ev) => window.removeEventListener(ev, onInput));
-      cancelAnimationFrame(fallbackRaf);
+      seatBtn.removeEventListener("pointerdown", onSeatDown);
+      seatBtn.removeEventListener("pointerup", onSeatUp);
+      seatBtn.removeEventListener("pointercancel", onSeatUp);
+      seatBtn.removeEventListener("lostpointercapture", onSeatUp);
+      seatBtn.removeEventListener("click", onSeatClick);
+      seatBtn.removeEventListener("contextmenu", noMenu);
+      closeBtn.removeEventListener("click", onClose);
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      stage.removeEventListener("click", onClickCapture, true);
+      if (mode === "film") lockScroll(false);
       window.clearTimeout(cupT);
       sec.classList.remove("is-ready");
       sprites.forEach((x) => x.destroy());
@@ -882,9 +933,8 @@ export function FriendStory({
   }, [motion]);
 
   return (
-    <section ref={section} className={`friend-story relative h-[640svh] bg-paper motion-reduce:h-auto${night ? " is-night" : ""}`}>
-      <h1 className="sr-only">{lines.map((l) => l.text).join(" ")}</h1>
-      <div className="fs-stage sticky top-0 h-[100svh] overflow-hidden bg-paper motion-reduce:static">
+    <section ref={section} data-mode="idle" className={`friend-story relative h-svh bg-paper motion-reduce:h-auto${night ? " is-night" : ""}`}>
+      <div className="fs-stage relative h-svh overflow-hidden bg-paper motion-reduce:h-auto motion-reduce:overflow-visible">
         <div className="fs-inner absolute inset-0 origin-center">
           <svg
             aria-hidden
@@ -897,7 +947,7 @@ export function FriendStory({
             strokeLinecap="round"
             strokeLinejoin="round"
           >
-            <defs dangerouslySetInnerHTML={{ __html: RIG2_DEFS + CAFE_DEFS }} />
+            <defs dangerouslySetInnerHTML={{ __html: CAFE_DEFS }} />
             <g className="fs-cam">
               {/* ============ the café ============ */}
               <rect x="-2000" y="-400" width="6000" height={FLOOR + 400} fill="url(#wall-tone)" stroke="none" />
@@ -984,7 +1034,7 @@ export function FriendStory({
 
               {/* speech */}
               <Bubble cls="b-push" x={900} y={650} text={bubbles.push} who="stranger" tail="r" />
-              <Bubble cls="b-react" x={580} y={700} text={bubbles.react} who="person" tail="d" size={22} />
+              <Bubble cls="b-react" x={580} nx={700} y={700} text={bubbles.react} who="person" tail="d" size={22} />
               <Bubble cls="b-ask" x={1010} y={640} text={bubbles.ask} who="stranger" tail="r" />
               <Bubble cls="b-talk" x={600} y={740} text="• • •" who="person" tail="d" />
               <Bubble cls="b-listen" x={1000} y={760} text={bubbles.listen} who="stranger" tail="r" />
@@ -1020,8 +1070,6 @@ export function FriendStory({
                 <circle r="104" stroke={RED} strokeWidth={5} strokeDasharray="14 12" fill="none" />
               </g>
 
-              {/* the ink curtain (the intro closes onto it; it becomes the About section at the end) */}
-              <rect className="fs-curtain" x={99999} y="-6000" width="20000" height="20000" fill={CURTAIN} stroke="none" />
               {/* tap targets, on top of everything (the art itself ignores the mouse) */}
               <rect className="p-hit" x="575" y="830" width="150" height="250" fill="transparent" stroke="none" style={{ cursor: "pointer" }} />
               <rect className="cup-hit" x="810" y="945" width="50" height="52" fill="transparent" stroke="none" style={{ cursor: "pointer" }} />
@@ -1048,15 +1096,20 @@ export function FriendStory({
           {/* the lines: left at mid height */}
           <div className="fs-words pointer-events-none absolute inset-0 px-(--gutter) motion-reduce:static motion-reduce:py-12">
             <div className="relative mx-auto h-full max-w-(--container-page)">
-              <div className="fs-hint absolute bottom-[9svh] left-0 motion-reduce:hidden md:bottom-[38svh]" style={{ opacity: 0 }}>
-                <p className="max-w-[12ch] font-display text-h2 leading-[1.02] font-semibold tracking-[-0.03em] text-balance text-ink">
-                  <span className="md:hidden">
-                    <Accent line={{ text: scrollHint.tapText, accent: scrollHint.accent }} />
-                  </span>
-                  <span className="hidden md:inline">
-                    <Accent line={{ text: scrollHint.text, accent: scrollHint.accent }} />
-                  </span>
-                </p>
+              {/* the first screen: what GenClosers is, readable at once (owner 2026-11-19) */}
+              <div className="fs-lead absolute bottom-[6svh] left-0 motion-reduce:static motion-reduce:mb-12 md:top-1/2 md:bottom-auto md:-translate-y-1/2">
+                <h2 className="max-w-[14ch] font-display text-h1 leading-[0.98] font-semibold tracking-[-0.035em] text-balance text-ink">
+                  <Accent line={{ text: lead.heading, accent: lead.accent }} />
+                </h2>
+                <p className="mt-5 max-w-[34ch] text-lead text-ink/75">{lead.body}</p>
+                {lead.link && (
+                  <Link href={lead.link.href} className="group pointer-events-auto mt-7 inline-flex items-center gap-3 font-display text-[1.125rem] font-medium text-ink">
+                    <span className="border-b border-ink/30 pb-0.5 transition-colors group-hover:border-signal group-hover:text-signal">{lead.link.label}</span>
+                    <span className="text-signal transition-transform duration-450 ease-primary group-hover:translate-x-1">
+                      <Arrow />
+                    </span>
+                  </Link>
+                )}
               </div>
               {lines.map((l, i) => (
                 <div key={l.text} className="fs-line absolute bottom-[9svh] left-0 motion-reduce:static motion-reduce:mb-6 md:bottom-[40svh]" style={motion ? { opacity: 0 } : undefined}>
@@ -1074,75 +1127,68 @@ export function FriendStory({
             </div>
           </div>
 
-          {/* the first screen: skip straight to the end card */}
+          {/* the chair: hold to have a seat (the story plays) */}
+          <button type="button" aria-label={seat.label} className="fs-seat absolute top-0 left-0 z-20 motion-reduce:hidden" style={motion ? undefined : { display: "none" }}>
+            <span className="relative block size-16 -translate-x-1/2 -translate-y-1/2">
+              <svg viewBox="0 0 64 64" className="absolute inset-0 size-full -rotate-90 overflow-visible" fill="none" aria-hidden>
+                <circle className="fs-seat-pulse" cx="32" cy="32" r="9" fill={RED} />
+                <circle className="fs-seat-disc" cx="32" cy="32" r="24" fill={PAPER} fillOpacity="0.72" stroke="currentColor" strokeOpacity="0.35" strokeWidth="2.5" />
+                <circle className="fs-seat-fill" cx="32" cy="32" r="24" stroke={RED} strokeWidth="3.5" strokeLinecap="round" pathLength={100} strokeDasharray="100" strokeDashoffset="100" />
+                <circle cx="32" cy="32" r="7" fill={RED} />
+              </svg>
+            </span>
+            <span className="fs-seat-label fs-seat-hop absolute bottom-[6rem] left-0 -translate-x-1/2 rounded-full bg-signal px-5 py-2.5 text-[1.75rem] leading-none whitespace-nowrap text-signal-ink shadow-[0_12px_32px_-10px_rgb(227_16_27/0.75)]" style={{ fontFamily: "var(--font-hand)" }}>
+              {watched ? seat.again : seat.hold}
+            </span>
+          </button>
+          {/* while the film plays: how to drive it and stop it */}
+          <p aria-hidden className="fs-film-hint pointer-events-none absolute bottom-6 left-(--gutter) z-20 max-w-[60%] font-mono text-[0.6875rem] tracking-[0.14em] text-ink/70 uppercase motion-reduce:hidden md:text-label">
+            <span className="hidden md:inline">{seat.hintDesktop}</span>
+            <span className="md:hidden">{seat.hintPhone}</span>
+          </p>
+          {/* while the film plays: stop it (Esc works too) */}
           <button
             type="button"
-            className="fs-skip absolute right-(--gutter) bottom-5 z-20 rounded-full border border-ink/15 bg-paper/80 px-4 py-2 font-mono text-label tracking-[0.16em] text-ink uppercase backdrop-blur-sm transition-colors hover:border-signal hover:text-signal motion-reduce:hidden"
-            style={{ opacity: 0, pointerEvents: "none" }}
+            className="fs-close absolute right-(--gutter) bottom-5 z-20 flex items-center gap-2 rounded-full border border-ink/15 bg-paper/80 px-4 py-2 font-mono text-label tracking-[0.16em] text-ink uppercase backdrop-blur-sm transition-colors hover:border-signal hover:text-signal motion-reduce:hidden"
             tabIndex={-1}
           >
-            {skip}
+            {seat.close}
+            <svg viewBox="0 0 12 12" className="size-2.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden>
+              <path d="M1.5 1.5l9 9M10.5 1.5l-9 9" />
+            </svg>
           </button>
-          {/* still for 5 s: a small reminder of how to move on (mouse on desktop, a tap on phones) */}
-          <div
-            aria-hidden
-            className="fs-idle pointer-events-none absolute right-[12%] bottom-[24svh] z-20 flex flex-col items-center gap-2 text-ink motion-reduce:hidden md:right-auto md:bottom-5 md:left-1/2 md:-translate-x-1/2"
-          >
-            <svg viewBox="0 0 24 36" className="hidden h-9 w-6 md:block" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <rect x="1.5" y="1.5" width="21" height="33" rx="10.5" />
-              <circle className="fs-idle-wheel" cx="12" cy="10" r="2.2" fill="currentColor" stroke="none" />
-            </svg>
-            {/* phones: a big tap target (finger sized) */}
-            <svg viewBox="0 0 40 40" className="h-[4.5rem] w-[4.5rem] md:hidden" fill="none" stroke="currentColor" strokeWidth="1.6">
-              <circle className="fs-idle-ripple" cx="20" cy="20" r="16" />
-              <circle cx="20" cy="20" r="11" strokeOpacity="0.35" />
-              <circle className="fs-idle-dot" cx="20" cy="20" r="5.5" fill="currentColor" stroke="none" />
-            </svg>
-            <span className="font-mono text-small tracking-[0.2em] uppercase md:text-label">
-              <span className="hidden md:inline">{idle.scroll}</span>
-              <span className="fs-idle-press inline-block md:hidden">{idle.tap}</span>
-            </span>
-          </div>
 
-          {/* the end: the ink curtain he drags closed is the About card */}
-          <div className="fs-about absolute inset-0 flex items-center bg-ink px-(--gutter) motion-reduce:hidden" style={{ display: "none" }}>
-            <div className="mx-auto grid w-full max-w-(--container-page) gap-10 md:grid-cols-12">
-              <h2 className="font-display text-h1 font-light tracking-[-0.035em] text-balance text-paper md:col-span-8">
-                <AboutHeading text={about.heading} heavy={about.heavy} />
-              </h2>
-              <div className="md:col-span-6 md:col-start-7">
-                <p className="text-lead text-mute-dark">{about.body}</p>
-                {/* a quiet way on for people who enjoyed the story (owner 2026-11-10) */}
-                {about.link && (
-                  <Link href={about.link.href} className="group mt-8 inline-flex items-center gap-3 font-display text-[1.125rem] font-medium text-paper">
-                    <span className="border-b border-paper/30 pb-0.5 transition-colors group-hover:border-signal group-hover:text-signal">{about.link.label}</span>
-                    <span className="text-signal transition-transform duration-450 ease-primary group-hover:translate-x-1">
-                      <Arrow />
-                    </span>
-                  </Link>
-                )}
+
+          {/* the opening: a title card over the café that he shoves off to the right when the film starts */}
+          <div aria-hidden className="fs-card absolute inset-0 bg-paper motion-reduce:hidden" style={{ display: "none" }}>
+            <div className="flex h-full items-center px-(--gutter)">
+              <div className="mx-auto w-full max-w-(--container-page)">
+                <LogoMark className="h-12 w-auto text-signal md:h-16" title="" />
+                <p className="mt-8 max-w-[12ch] font-display text-[clamp(3rem,7.5vw,7rem)] leading-[0.92] font-semibold tracking-[-0.045em] text-ink">
+                  <Accent line={{ text: card.title, accent: card.accent }} />
+                </p>
+                <p className="mt-6 text-[1.75rem] leading-none text-ink/70 md:text-[2.25rem]" style={{ fontFamily: "var(--font-hand)" }}>
+                  {card.sub}
+                </p>
               </div>
             </div>
           </div>
 
-          {/* the opening: the intro's paper screen with the lockup, as a card he shoves off to the right */}
-          <div aria-hidden className="fs-card absolute inset-0 bg-paper motion-reduce:hidden" style={motion ? undefined : { display: "none" }}>
-            <div className="wheel-size absolute inset-0 leading-none">
-              <div className="absolute top-1/2 left-[calc(var(--gutter)+1.1em-1.0105em)] flex -translate-y-1/2 items-center font-display leading-none font-bold text-ink sm:left-[calc(27.9vw-1.0105em)] [&_.brand-logo]:text-signal">
-                <LockupInner />
-              </div>
+          {/* the ending curtain: a copy of the section below ("Start here"), revealed by the curtain edge */}
+          {reveal && (
+            <div aria-hidden inert className="fs-reveal absolute inset-0 overflow-hidden bg-ink motion-reduce:hidden" style={{ display: "none" }}>
+              {reveal}
             </div>
-          </div>
-
+          )}
           <svg aria-hidden className="fs-world fs-top pointer-events-none absolute inset-0 h-full w-full" viewBox={motion ? "-200 380 1500 900" : "380 560 900 640"} preserveAspectRatio="xMidYMid slice" fill="none" stroke={INK} strokeWidth={4} strokeLinecap="round" strokeLinejoin="round">
             <g className="slot-top" />
-              {/* effort marks while he catches his breath between shoves (comic pop on twos) */}
-              <g className="fs-effort" style={{ display: "none" }}>
-                <path d="M-46 -8q-10 15 0 21q10 -6 0 -21z" fill={WHITE} strokeWidth={3} />
-                <path d="M-70 18q-7 10 0 14q7 -4 0 -14z" fill={WHITE} strokeWidth={2.6} />
-                <path d="M-14 -40l-6 -16M6 -46v-17M26 -40l7 -15" strokeWidth={4} />
-                <path d="M64 30q10 3 0 9q10 3 0 9M80 18q8 2 0 7q8 2 0 7" strokeWidth={3} />
-              </g>
+            {/* effort marks while he catches his breath between pulls (comic pop on twos) */}
+            <g className="fs-effort" style={{ display: "none" }}>
+              <path d="M-46 -8q-10 15 0 21q10 -6 0 -21z" fill={WHITE} strokeWidth={3} />
+              <path d="M-70 18q-7 10 0 14q7 -4 0 -14z" fill={WHITE} strokeWidth={2.6} />
+              <path d="M-14 -40l-6 -16M6 -46v-17M26 -40l7 -15" strokeWidth={4} />
+              <path d="M64 30q10 3 0 9q10 3 0 9M80 18q8 2 0 7q8 2 0 7" strokeWidth={3} />
+            </g>
           </svg>
 
           {/* day / night (this scene only) */}

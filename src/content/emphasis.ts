@@ -4,6 +4,7 @@ export const emphasis: Record<string, string> = {
   "Sales is a human conversation, not a manipulation game.": "human conversation,",
   "Built for anyone who has to convince someone of something.": "convince",
   "Sales is not a talent. It is a system you can learn.": "a system you can learn.",
+  "Building India's Sales Revolution.": "Sales Revolution.",
   "What you get": "you get",
   "You don't just watch. You practise, and you get scored.": "you get scored.",
   "21 modules. One complete sales call. Built step by step.": "One complete sales call.",

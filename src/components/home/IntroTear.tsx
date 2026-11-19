@@ -11,6 +11,8 @@
  * - INTRO_EVERY_LOAD (lib/intro.ts) = play on every load while testing; otherwise once per visit.
  * - Any scroll, swipe, key or click skips straight to the slice.
  * - Never plays for prefers-reduced-motion (decided before first paint by introGateScript).
+ * - sliceOnly (home, owner 2026-11-19): no wheel turn and no paper card. A beat on "Sales", then the
+ *   slice, and the halves peel straight onto the page (about 1.5 s). The full version stays for reuse.
  */
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -25,7 +27,7 @@ import { site } from "@/content/site";
 
 const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
-export function IntroTear({ words, stageId }: { words: readonly string[]; stageId: string }) {
+export function IntroTear({ words, stageId, sliceOnly = false }: { words: readonly string[]; stageId: string; sliceOnly?: boolean }) {
   const [state, setState] = useState<"pending" | "playing" | "done">("pending");
   const root = useRef<HTMLDivElement>(null);
   const top = useRef<HTMLDivElement>(null);
@@ -113,9 +115,9 @@ export function IntroTear({ words, stageId }: { words: readonly string[]; stageI
       if (heroText && myText) myText.style.marginLeft = heroText.style.marginLeft;
     };
 
-    const frames = n * WHEEL.sketchBeatFrames; // one full turn: Sales back to Sales
-    const tl = gsap.timeline({ delay: 0.8 }); // a moment on "Sales" first
-    tl.to(clock, { f: frames, duration: frames / WHEEL.fps, ease: "none", onUpdate: render });
+    const frames = sliceOnly ? 0 : n * WHEEL.sketchBeatFrames; // one full turn: Sales back to Sales
+    const tl = gsap.timeline({ delay: sliceOnly ? 0.3 : 0.8 }); // a moment on "Sales" first
+    if (frames) tl.to(clock, { f: frames, duration: frames / WHEEL.fps, ease: "none", onUpdate: render });
 
     // The slice: the arrow flies across along the centre line, the slit opens behind it.
     tl.addLabel("cut", ">+0.05");
@@ -125,20 +127,26 @@ export function IntroTear({ words, stageId }: { words: readonly string[]; stageI
     tl.to(top.current, { x: -8, duration: 0.16, ease: "power2.out" }, "cut+=0.6");
     tl.to(bottom.current, { x: 8, duration: 0.16, ease: "power2.out" }, "cut+=0.6");
     tl.addLabel("peel", "cut+=0.72");
+    const peel = sliceOnly ? 0.85 : 1.2;
     tl.to(slit.current, { opacity: 0, duration: 0.3 }, "peel");
-    tl.to(top.current, { yPercent: -58, rotateX: 34, z: -140, duration: 1.2, ease: "power3.inOut" }, "peel");
-    tl.to(bottom.current, { yPercent: 58, rotateX: -34, z: -140, duration: 1.2, ease: "power3.inOut" }, "peel");
-    tl.to([top.current, bottom.current], { opacity: 0, duration: 0.45, ease: "power1.in" }, "peel+=0.8");
+    tl.to(top.current, { yPercent: -58, rotateX: 34, z: -140, duration: peel, ease: "power3.inOut" }, "peel");
+    tl.to(bottom.current, { yPercent: 58, rotateX: -34, z: -140, duration: peel, ease: "power3.inOut" }, "peel");
+    tl.to([top.current, bottom.current], { opacity: 0, duration: 0.4, ease: "power1.in" }, `peel+=${peel * 0.62}`);
     // Paper inversion: the cut opens onto a thin strip of paper that widens (it leads the halves, so no
     // black gap shows) until the whole screen is paper. The lockup lands on it: ink letters, red mark.
-    tl.to(paper.current, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.95, ease: "power3.inOut" }, "peel");
-    tl.call(placePaperLockup, [], "peel");
-    tl.to(paperLock.current, { opacity: 1, scale: 1, duration: 0.9, ease: "power3.out" }, "peel+=0.55");
-    // One beat on paper, then hand over: the hero underneath starts on the same paper card with the same
-    // lockup in the same spot, and the salesman shoves that card away (owner 2026-11-10: no close to ink)
-    tl.addLabel("ink", "peel+=1.6");
-    if (stage) tl.set(stage, { opacity: 1 }, "ink");
-    tl.set(paper.current, { opacity: 0 }, "ink+=0.05");
+    if (sliceOnly) {
+      // the cut opens straight onto the page underneath
+      if (stage) tl.set(stage, { opacity: 1 }, "peel");
+    } else {
+      tl.to(paper.current, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.95, ease: "power3.inOut" }, "peel");
+      tl.call(placePaperLockup, [], "peel");
+      tl.to(paperLock.current, { opacity: 1, scale: 1, duration: 0.9, ease: "power3.out" }, "peel+=0.55");
+      // One beat on paper, then hand over: the hero underneath starts on the same paper card with the same
+      // lockup in the same spot (owner 2026-11-10: no close to ink)
+      tl.addLabel("ink", "peel+=1.6");
+      if (stage) tl.set(stage, { opacity: 1 }, "ink");
+      tl.set(paper.current, { opacity: 0 }, "ink+=0.05");
+    }
 
     if (process.env.NODE_ENV !== "production") (window as unknown as { __intro: unknown }).__intro = { clock, render, tl };
 
@@ -184,7 +192,7 @@ export function IntroTear({ words, stageId }: { words: readonly string[]; stageI
       lockScroll(false);
       if (stage) gsap.set(stage, { clearProps: "transform,opacity,transformOrigin" });
     };
-  }, [state, words, stageId]);
+  }, [state, words, stageId, sliceOnly]);
 
   if (state === "done") return null;
 

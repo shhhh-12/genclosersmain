@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { LogoMark } from "@/components/brand/LogoMark";
-import { WhatsApp } from "@/components/ui/Icons";
+import { Instagram, Mail, WhatsApp } from "@/components/ui/Icons";
 import { site } from "@/content/site";
 import { listedCourses } from "@/content/courses";
 
@@ -10,12 +10,12 @@ export function SiteFooter({ minimal = false }: { minimal?: boolean }) {
       <div className="mx-auto grid max-w-(--container-page) gap-12 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
           <LogoMark className="h-12 w-auto text-signal" title={site.name} />
-          <p className="mt-6 max-w-[22ch] font-display text-h3 font-semibold tracking-[-0.02em]">{site.tagline}</p>
+          <p className="mt-6 max-w-[22ch] font-display text-h3 font-semibold tracking-[-0.02em]">{site.footerLine}</p>
         </div>
 
         {!minimal && (
           <div>
-            <p className="eyebrow text-mute-dark">Courses</p>
+            <p className="eyebrow text-mute-dark">{site.footer.explore}</p>
             <ul className="mt-4 space-y-2">
               {listedCourses.map((c) => (
                 <li key={c.slug}>
@@ -24,6 +24,16 @@ export function SiteFooter({ minimal = false }: { minimal?: boolean }) {
                   </Link>
                 </li>
               ))}
+              <li>
+                <Link href="/courses" className="text-paper transition-colors hover:text-signal">
+                  {site.footer.allCourses}
+                </Link>
+              </li>
+              <li>
+                <Link href={site.footer.about.href} className="text-paper transition-colors hover:text-signal">
+                  {site.footer.about.label}
+                </Link>
+              </li>
             </ul>
           </div>
         )}
@@ -37,6 +47,12 @@ export function SiteFooter({ minimal = false }: { minimal?: boolean }) {
             className="mt-4 inline-flex items-center gap-2 text-paper transition-colors hover:text-signal"
           >
             <WhatsApp /> {site.whatsapp.display}
+          </a>
+          <a href={`mailto:${site.email}`} className="mt-3 flex items-center gap-2 text-paper transition-colors hover:text-signal">
+            <Mail /> {site.email}
+          </a>
+          <a href={site.instagram.link} target="_blank" rel="noopener noreferrer" className="mt-3 flex items-center gap-2 text-paper transition-colors hover:text-signal">
+            <Instagram /> {site.instagram.handle}
           </a>
         </div>
       </div>

@@ -76,6 +76,7 @@ function Certificate({ courseName }: { courseName: string }) {
               </span>
             ))}
           </div>
+          <p className="mt-[clamp(0.8rem,2.4vw,1.6rem)] font-mono text-[clamp(0.5rem,0.9vw,0.7rem)] tracking-[0.16em] text-signal uppercase">{t.onlyPassed}</p>
         </div>
       </div>
     </div>

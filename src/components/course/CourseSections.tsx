@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Reveal } from "@/components/motion/Reveal";
 import { ScrollRead } from "@/components/motion/ScrollRead";
 import { VslPlayer } from "@/components/media/VslPlayer";
@@ -35,6 +36,20 @@ export function CourseHero({ course }: { course: Course }) {
   return (
     <section className="px-(--gutter) pt-28 pb-(--section-y) sm:pt-36">
       <div className="mx-auto max-w-(--container-page)">
+        {/* where you are: a course's own page, under the list of all courses */}
+        <nav aria-label={site.ui.breadcrumbLabel} className="mb-8 text-small text-mute-dark">
+          <ol className="flex flex-wrap items-center gap-2">
+            <li>
+              <Link href="/courses" className="border-b border-paper/20 pb-0.5 transition-colors hover:border-signal hover:text-paper">
+                {site.ui.allCourses}
+              </Link>
+            </li>
+            <li aria-hidden className="text-paper/30">/</li>
+            <li aria-current="page" className="text-paper">
+              {course.name}
+            </li>
+          </ol>
+        </nav>
         <h1 className="max-w-[17ch] font-display text-h1 font-semibold tracking-[-0.035em] text-balance">
           <ScrollRead text={course.heading} auto keep={course.headingKeep} />
         </h1>

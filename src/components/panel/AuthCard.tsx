@@ -1,18 +1,14 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
-import { LogoMark } from "@/components/brand/LogoMark";
 import { GlassPanel } from "@/components/ui/Glass";
-import { site } from "@/content/site";
+import { SiteHeader } from "@/components/layout/SiteHeader";
 
-/** Centered glass card on black for login / set-password. */
+/** Centered glass card on black for login / set-password, under the site's own header. */
 export function AuthCard({ title, intro, children }: { title: string; intro: string; children: ReactNode }) {
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-black px-(--gutter) py-16">
+    <>
+    <SiteHeader />
+    <main className="flex min-h-dvh items-center justify-center bg-black px-(--gutter) pt-28 pb-16">
       <div className="w-full max-w-md">
-        <Link href="/" className="mb-8 flex items-center gap-2.5 text-paper">
-          <LogoMark className="h-7 w-auto text-signal" title="" />
-          <span className="font-display text-lg font-semibold">{site.name}</span>
-        </Link>
         <GlassPanel>
           <div className="p-8 sm:p-10">
             <h1 className="font-display text-h2 font-semibold tracking-[-0.03em]">{title}</h1>
@@ -22,6 +18,7 @@ export function AuthCard({ title, intro, children }: { title: string; intro: str
         </GlassPanel>
       </div>
     </main>
+    </>
   );
 }
 

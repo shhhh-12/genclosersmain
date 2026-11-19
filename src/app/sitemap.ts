@@ -4,5 +4,5 @@ import type { MetadataRoute } from "next";
 const site = SITE_URL;
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  return ["", "/courses", "/courses/sales-is-all-you-need"].map((path) => ({ url: `${site}${path}` }));
+  return ["", "/about", "/courses", "/courses/sales-is-all-you-need"].map((path) => ({ url: `${site}${path}` }));
 }

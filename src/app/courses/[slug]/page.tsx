@@ -47,7 +47,7 @@ export default async function CoursePage({ params }: PageProps<"/courses/[slug]"
 
   return (
     <>
-      <SiteHeader variant="landing" />
+      <SiteHeader />
       <main>
         <CourseHero course={course} />
         <CountdownBand course={course} />
@@ -67,7 +67,7 @@ export default async function CoursePage({ params }: PageProps<"/courses/[slug]"
         <Faqs course={course} />
         <Apply course={course} />
       </main>
-      <SiteFooter minimal />
+      <SiteFooter />
       <CtaBar price={course.price.amount} label={course.ctaLabel} seats={site.ui.seatsLabel} />
     </>
   );

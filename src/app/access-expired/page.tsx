@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { panel } from "@/content/panel";
+import { SiteHeader } from "@/components/layout/SiteHeader";
 
 export const metadata: Metadata = { title: "Access ended", robots: { index: false } };
 
 export default function AccessExpired() {
   return (
+    <>
+    <SiteHeader />
     <main className="min-h-screen bg-ink text-paper flex items-center px-6">
       <div className="max-w-xl">
         <h1 className="font-display text-h2 font-semibold tracking-tight">{panel.expired.title}</h1>
@@ -16,5 +19,6 @@ export default function AccessExpired() {
         </form>
       </div>
     </main>
+    </>
   );
 }

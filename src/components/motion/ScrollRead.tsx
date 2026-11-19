@@ -12,6 +12,8 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useMotionAllowed } from "@/lib/useMotionAllowed";
 import { emphasis } from "@/content/emphasis";
+import { sceneProgress, scenePinned } from "@/lib/sceneProgress";
+import { seg } from "@/lib/scrollScene";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -23,6 +25,9 @@ export function ScrollRead({
   className,
   auto = false,
   keep,
+  still = false,
+  scene,
+  soft = false,
 }: {
   text: string;
   settle?: "ink" | "signal";
@@ -31,13 +36,19 @@ export function ScrollRead({
   auto?: boolean;
   /** A phrase whose letters stay red once the highlight has passed. */
   keep?: string;
+  /** No reading highlight: the heading just shows (thick and thin weights kept). */
+  still?: boolean;
+  /** Read with the India scene's scroll (desktop, while it holds), over this part of it. */
+  scene?: readonly [from: number, to: number];
+  /** Unread letters stay more visible (for text that is on screen before you scroll). */
+  soft?: boolean;
 }) {
   const ref = useRef<HTMLSpanElement>(null);
   const motion = useMotionAllowed();
 
   useEffect(() => {
     const el = ref.current;
-    if (!motion || !el) return;
+    if (!motion || still || !el) return;
     const chars = Array.from(el.querySelectorAll<HTMLElement>("[data-c]"));
     const n = chars.length;
     const states = new Array<number>(n).fill(-1);
@@ -54,11 +65,28 @@ export function ScrollRead({
     };
     paint(0);
 
+    if (scene && scenePinned()) {
+      return sceneProgress.on((p) => paint(seg(p, scene[0], scene[1])));
+    }
+
     if (auto) {
+      // on screen under the intro: start once the intro has opened onto the page (owner 2026-11-19)
+      const html = document.documentElement;
       const o = { p: 0 };
-      const tw = gsap.to(o, { p: 1, duration: Math.max(1.2, n * 0.05), delay: 0.35, ease: "none", onUpdate: () => paint(o.p) });
+      let tw: gsap.core.Tween | null = null;
+      const run = () => {
+        tw = gsap.to(o, { p: 1, duration: Math.max(1.2, n * 0.05), delay: 0.35, ease: "none", onUpdate: () => paint(o.p) });
+      };
+      const mo = new MutationObserver(() => {
+        if (html.dataset.intro === "play") return;
+        mo.disconnect();
+        run();
+      });
+      if (html.dataset.intro === "play") mo.observe(html, { attributes: true, attributeFilter: ["data-intro"] });
+      else run();
       return () => {
-        tw.kill();
+        mo.disconnect();
+        tw?.kill();
       };
     }
     const st = ScrollTrigger.create({
@@ -70,7 +98,7 @@ export function ScrollRead({
       onRefresh: (self) => paint(self.progress),
     });
     return () => st.kill();
-  }, [motion, text, auto]);
+  }, [motion, still, text, auto, scene]);
 
   // Thick and thin: the emphasised phrase is heavy, the rest light (content/emphasis.ts)
   const strong = emphasis[text];
@@ -79,7 +107,7 @@ export function ScrollRead({
   const starts = words.map((_, w) => words.slice(0, w).reduce((n, x) => n + x.length + 1, 0));
   const weight = (w: number) => (sAt < 0 ? undefined : starts[w] < sAt + strong!.length && starts[w] + words[w].length > sAt ? "font-bold" : "font-light");
 
-  if (!motion)
+  if (!motion || still)
     return (
       <span className={className}>
         {words.map((word, w) => (
@@ -95,7 +123,7 @@ export function ScrollRead({
   const kAt = keep ? text.indexOf(keep) : -1;
   const kept = (at: number) => kAt >= 0 && at >= kAt && at < kAt + keep!.length;
   return (
-    <span ref={ref} className={`scroll-read ${settle === "signal" ? "settle-signal" : ""} ${className ?? ""}`} aria-label={text} role="text">
+    <span ref={ref} className={`scroll-read ${soft ? "read-soft" : ""} ${settle === "signal" ? "settle-signal" : ""} ${className ?? ""}`} aria-label={text} role="text">
       {words.map((word, w, all) => (
         <span key={w} aria-hidden className={`inline-block whitespace-nowrap ${weight(w) ?? ""}`}>
           {word.split("").map((ch, ci) => (
