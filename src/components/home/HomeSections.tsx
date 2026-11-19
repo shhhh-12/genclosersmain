@@ -83,7 +83,7 @@ export function Proof() {
       {/* the numbers, as a band at the foot of the same screen */}
       <NumbersBand />
       {/* desktop, while the screen holds: how to move on (fades once India is red) */}
-      <p aria-hidden className="dots-cue pointer-events-none absolute top-28 right-(--gutter) hidden flex-col items-center gap-2 font-mono text-label tracking-[0.2em] text-mute-dark uppercase [@media(min-width:1024px)_and_(min-height:840px)]:flex">
+      <p aria-hidden className="dots-cue pointer-events-none absolute top-28 right-(--gutter) hidden flex-col items-center gap-2 font-mono text-label tracking-[0.2em] text-mute-dark uppercase [@media(min-width:1024px)_and_(min-height:700px)]:flex">
         <svg viewBox="0 0 24 36" className="h-8 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
           <rect x="1.5" y="1.5" width="21" height="33" rx="10.5" />
           <circle className="dots-cue-wheel" cx="12" cy="10" r="2.2" fill="currentColor" stroke="none" />

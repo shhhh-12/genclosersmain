@@ -112,6 +112,11 @@ const STOPS = [0.213, 0.284, 0.398, 0.497, 0.6, 0.75, 0.8365, 0.964];
 const PLAY_SPEED = 0.042; // story progress per second at full speed
 const SLOW = 0.3; // speed near a stop (fraction of full)
 const SLOW_NEAR = 0.03; // how close to a stop the slow-down reaches (story progress)
+// How much there is to read at each stop: story lines + speech bubbles on screen together (owner
+// 2026-11-19: slower where there is more text). More = slower and for longer; 1 = the pace above.
+const STOP_TEXT = [2, 1, 2, 3, 1, 3, 2, 1];
+const STOP_SLOW = STOP_TEXT.map((n) => SLOW / (1 + 0.6 * (n - 1))); // 0.3, 0.19, 0.14
+const STOP_NEAR = STOP_TEXT.map((n) => SLOW_NEAR * (1 + 0.45 * (n - 1))); // 0.03, 0.044, 0.057
 const SKIP_SPEED = 6; // a tap plays on to the next stop this many times faster
 const HOLD_SECONDS = 0.8; // hold the chair this long to start (owner 2026-11-19: shorter)
 // scrolling or swiping during the film takes over: the story follows the scroll (like the old scroll story)
@@ -716,8 +721,9 @@ export function FriendStory({
         if (Math.abs(scrubTo - film) < 2e-4) film = scrubTo;
       } else if (film < 1) {
         const was = film;
-        const near = STOPS.reduce((m, st) => Math.min(m, Math.abs(film - st)), 1);
-        const pace = skipping ? SKIP_SPEED : SLOW + (1 - SLOW) * smooth01(near / SLOW_NEAR);
+        // the slowest pull of any stop nearby (each eases down to its own speed over its own reach)
+        const read = STOPS.reduce((m, st, i) => Math.min(m, STOP_SLOW[i] + (1 - STOP_SLOW[i]) * smooth01(Math.abs(film - st) / STOP_NEAR[i])), 1);
+        const pace = skipping ? SKIP_SPEED : read;
         film = Math.min(1, film + dt * PLAY_SPEED * pace);
         if (skipping && STOPS.some((st) => was < st && film >= st)) skipping = false;
       }

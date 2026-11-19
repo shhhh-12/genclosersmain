@@ -84,6 +84,7 @@ export function IndiaDots({ label, className }: { label: string; className?: str
     };
 
     const size = () => {
+      fit();
       w = box.clientWidth;
       cell = w / INDIA_GRID.cols;
       const h = cell * INDIA_GRID.rows;
@@ -98,11 +99,30 @@ export function IndiaDots({ label, className }: { label: string; className?: str
     // page opens, at the top of the page), 1 when its bottom is just above the middle of the screen
     // Inside a pinned scene ([data-dots-scene], desktop): the scroll through that scene drives it.
     const scene = box.closest<HTMLElement>("[data-dots-scene]");
+    const stage = scene?.firstElementChild as HTMLElement | null | undefined;
+    const HOLD = 0.33; // of the window height: about one scroll
+    // pinned: the scene is the stage's own height plus the hold, and the stage sticks with its foot on
+    // screen when it is taller than the window (laptops), so the hold is the same on every screen
+    const fit = () => {
+      if (!scene || !stage) return;
+      if (!scenePinned()) {
+        scene.style.removeProperty("height");
+        scene.style.removeProperty("--pin-top");
+        return;
+      }
+      const vh = window.innerHeight;
+      const h = stage.offsetHeight;
+      scene.style.setProperty("--pin-top", `${Math.min(0, vh - h)}px`);
+      scene.style.height = `${Math.max(h, vh) + Math.round(vh * HOLD)}px`;
+    };
     const read = () => {
       const vh = window.innerHeight;
-      if (scene && scenePinned()) {
+      if (scene && stage && scenePinned()) {
         const sr = scene.getBoundingClientRect();
-        return clamp01(-sr.top / Math.max(1, (scene.offsetHeight - vh) * 0.9));
+        const h = stage.offsetHeight;
+        const lead = Math.max(0, h - vh); // scrolled before it sticks (its top padding goes under the header)
+        const hold = scene.offsetHeight - Math.max(h, vh);
+        return clamp01((-sr.top - lead) / Math.max(1, hold * 0.9));
       }
       const rect = box.getBoundingClientRect();
       const start = Math.min(vh * 0.85, rect.top + window.scrollY);
@@ -136,11 +156,18 @@ export function IndiaDots({ label, className }: { label: string; className?: str
     }
     const ro = new ResizeObserver(size);
     ro.observe(box);
+    if (stage) ro.observe(stage); // fonts or text wrapping change its height
+    const onResize = () => {
+      fit();
+      onScroll();
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onResize);
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
     };
   }, [motion]);
 

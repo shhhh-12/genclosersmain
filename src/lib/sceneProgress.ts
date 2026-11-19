@@ -18,6 +18,8 @@ export const sceneProgress = {
   },
 };
 
-/** The first screen holds still (and drives everything) only on desktops tall enough to show it whole. */
-export const SCENE_PINNED_QUERY = "(min-width: 1024px) and (min-height: 840px)";
+/** The first screen holds still (and drives everything) on desktops and laptops at least 700px tall
+ * (owner 2026-11-19: laptops too). When it is a bit taller than the window it holds with its foot on
+ * screen (IndiaDots sets --pin-top), so only top padding sits under the header. */
+export const SCENE_PINNED_QUERY = "(min-width: 1024px) and (min-height: 700px)";
 export const scenePinned = () => typeof window !== "undefined" && window.matchMedia(SCENE_PINNED_QUERY).matches;

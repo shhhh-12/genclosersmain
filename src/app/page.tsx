@@ -17,8 +17,9 @@ export default function HomePage() {
         <main>
           {/* TESTING (owner 2026-11-19): the India band first, the café story under it */}
           {/* desktop (tall enough to show the whole band): it holds on screen for a short scroll while India turns red, then moves on */}
-          <div data-dots-scene className="bg-ink [@media(min-width:1024px)_and_(min-height:840px)]:h-[133svh]">
-            <div className="[@media(min-width:1024px)_and_(min-height:840px)]:sticky [@media(min-width:1024px)_and_(min-height:840px)]:top-0">
+          {/* the hold is about one scroll: IndiaDots sets the scene height (stage + 33svh) and --pin-top */}
+          <div data-dots-scene className="bg-ink [@media(min-width:1024px)_and_(min-height:700px)]:h-[133svh]">
+            <div className="[@media(min-width:1024px)_and_(min-height:700px)]:sticky [@media(min-width:1024px)_and_(min-height:700px)]:[top:var(--pin-top,0px)]">
               <Proof />
             </div>
           </div>
