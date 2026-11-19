@@ -927,19 +927,10 @@ html {
   .proof-burst { display: none; }
 }
 
-/* Space between sections (owner 2026-11-19): every white section on the pages is a paper
-   sheet (sharp corners) with a gap of ink around it, so each section reads as its own block and two white sections in
-   a row never run together. */
-:root {
-  --sheet-gap: clamp(0.5rem, 0.2rem + 1.2vw, 1.25rem);
-  --sheet-radius: 0; /* owner 2026-11-19: sharp corners, as before */
-}
-main section.on-paper {
-  margin: var(--sheet-gap);
-  border-radius: var(--sheet-radius);
-}
+/* White sections run end to end (owner 2026-11-19, after trying inset sheets). Two white sections in a
+   row get a hairline between them so they never read as one. */
 main section.on-paper + section.on-paper {
-  margin-top: 0; /* one gap between two sheets, not two */
+  border-top: 1px solid var(--color-paper-line);
 }
 
 /* reading text at the smaller scale: a hair of tracking so it breathes */
