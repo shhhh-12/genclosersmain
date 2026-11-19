@@ -100,7 +100,7 @@ export const home = {
   proof: {
     // the first screen of the page (owner 2026-11-19: India first). Words = the sample site's hero.
     heading: "Building India's Sales Revolution.",
-    keep: "Revolution.", // stays red after the heading reads itself
+    keep: "Sales Revolution.", // stays red after the heading reads itself (owner 2026-11-19: "Sales" red too)
     body: "Born in Tamil Nadu. Built for India. Transforming sales education by empowering individuals and businesses with the skills, systems and psychology to win in sales.",
     stats: [
       { rupee: true, value: 20, suffix: " Cr+", label: "in revenue our founders helped businesses generate" },

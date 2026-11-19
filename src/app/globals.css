@@ -932,7 +932,7 @@ body {
 }
 
 :root {
-  --type-scale: 0.63; /* one knob for every text size on the site (owner 2026-11-19: 0.9, then 30% smaller) */
+  --type-scale: 0.66; /* one knob for every text size on the site (owner 2026-11-19: 0.9, then 30% smaller, then 5% bigger) */
 }
 
 /* headings: a touch of air between words (the tight tracking also tightens the spaces) */
