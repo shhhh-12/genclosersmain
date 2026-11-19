@@ -4,8 +4,11 @@
 
 export const about = {
   title: "About", // UI copy (nav + page title)
-  heading: "Building India's Sales Revolution.",
-  keep: "Revolution.",
+  // owner 2026-11-19: a hero that isn't the home one. The line is the YouTube channel's own description.
+  heading: "Driven by a vision to teach sales as a life skill for every single Indian.",
+  keep: "a life skill",
+  // the hero photo: the owner's workshop picture (same file as the home proof wall)
+  photo: { src: "/proof/workshop-1.webp", width: 682, height: 579, alt: "A GenClosers session: people around a long table listening to the speaker at a screen.", caption: "Workshop" },
   body: "Born in Tamil Nadu. Built for India. Transforming sales education by empowering individuals and businesses with the skills, systems and psychology to win in sales.",
 
   mission: {
@@ -16,6 +19,15 @@ export const about = {
       "Train individuals into confident closers through the GenClosers Sales Program: real practice, feedback, and certification.",
     ],
   },
+  // Mission = today, Vision = tomorrow, shown as pairs (owner 2026-11-19): [mission item, vision item]
+  pairs: [
+    [0, 1],
+    [1, 0],
+    [2, 2],
+  ],
+  pairsHeading: "Mission and Vision.", // UI copy
+  today: "Today", // UI copy
+  tomorrow: "Tomorrow", // UI copy
   vision: {
     title: "Vision",
     items: [
@@ -33,6 +45,8 @@ export const about = {
       role: "Co-Founder and Managing Partner, GenClosers",
       photo: { src: "/about/monish-aravind-k.webp", width: 328, height: 330 },
       highlight: "Ex Sales Lead and Best Performer, FitX120 (GamieFitX), 1.5Cr+ revenue generated", // one bio line for home
+      // the companies named in his bio, as tags
+      brands: ["Vorth Media", "ScreelX", "Zorrofit", "Nuke Marketing", "FitX120"],
       bio: [
         "Founder, Vorth Media",
         "Sales Consultant: ScreelX, Zorrofit, Nuke Marketing",
@@ -45,6 +59,7 @@ export const about = {
       role: "Co-Founder and Executive Partner, GenClosers",
       photo: { src: "/about/sethuraman-a.webp", width: 324, height: 358 },
       highlight: "Helped businesses generate 20Cr+ cumulative revenue across niches", // one bio line for home
+      brands: ["Green Sigma", "FitX120", "ScreelX", "Ashtag", "Nuke Marketing"],
       bio: [
         "Chief Revenue Officer, Green Sigma",
         "Ex Chief Operating Officer, FitX120",
@@ -55,10 +70,7 @@ export const about = {
     },
   ],
 
-  // UI copy: the two ways on
-  next: {
-    heading: "Start with the course, or talk to us.",
-    course: "See the course",
-    talk: "Talk to us on WhatsApp",
-  },
+  // "In the room": the workshop photos and a few of the messages people sent (home.proofWall items)
+  room: { heading: "In the room.", items: [1, 2, 3, 5, 4] }, // UI copy heading; indexes into home.proofWall.items
+  // the ending is the home closing band (home.closing)
 } as const;

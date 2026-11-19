@@ -6,8 +6,12 @@
  * Phones: a swipeable row, no dragging. Same comic-ink look as the home story.
  */
 
-import { useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { usePolaroidDrag } from "@/lib/usePolaroidDrag";
+import { clamp01, easeOut, seg } from "@/lib/scrollScene";
+
+/** Same query as the CSS that pins the section (.aud-stage in globals.css). */
+const PINNED = "(min-width: 1024px) and (min-height: 760px) and (max-height: 1100px)";
 import type { Card } from "@/content/types";
 
 const INK = "#151313";
@@ -63,8 +67,8 @@ const SPOTS = [
   { l: 2, t: 10, r: -6 },
   { l: 36, t: 0, r: 4 },
   { l: 68, t: 34, r: -3 },
-  { l: 12, t: 372, r: 5 },
-  { l: 50, t: 360, r: -5 },
+  { l: 12, t: 326, r: 5 },
+  { l: 50, t: 314, r: -5 },
 ];
 
 export function AudiencePolaroids({ items, sticker, dragHint }: { items: readonly Card[]; sticker: string; dragHint: string }) {
@@ -72,9 +76,61 @@ export function AudiencePolaroids({ items, sticker, dragHint }: { items: readonl
 
   usePolaroidDrag(ref);
 
+  // While the section holds (desktop), the cards are dealt onto the table one by one: --in goes
+  // 0 -> 1 per card from the scroll, damped; scrolling back takes them off again. Elsewhere they just show.
+  useEffect(() => {
+    const table = ref.current;
+    const scene = table?.closest<HTMLElement>("[data-aud-scene]");
+    const mq = window.matchMedia(PINNED);
+    const calm = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (!table || !scene) return;
+    const cards = Array.from(table.querySelectorAll<HTMLElement>("[data-pol]"));
+    let p = 0, target = 0, raf = 0, last = 0;
+    const paint = () => cards.forEach((c, i) => c.style.setProperty("--in", easeOut(seg(p, i * 0.12, i * 0.12 + 0.4)).toFixed(3)));
+    const read = () => {
+      const vh = window.innerHeight;
+      const top = scene.getBoundingClientRect().top;
+      const start = vh; // the first card starts as soon as the section comes into view
+      const end = parseFloat(getComputedStyle(scene.firstElementChild as HTMLElement).top) || 96; // all landed by the time the stage sticks: the hold shows the full table
+      return clamp01((start - top) / (start - end));
+    };
+    const frame = (now: number) => {
+      const dt = Math.min(48, now - last || 16);
+      last = now;
+      p += (target - p) * (1 - Math.exp(-dt / 110));
+      if (Math.abs(target - p) < 2e-4) p = target;
+      paint();
+      raf = p === target ? 0 : requestAnimationFrame(frame);
+    };
+    const onScroll = () => {
+      target = read();
+      if (!raf) {
+        last = performance.now();
+        raf = requestAnimationFrame(frame);
+      }
+    };
+    const setup = () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
+      raf = 0;
+      if (mq.matches && !calm.matches) {
+        p = target = read();
+        paint();
+        window.addEventListener("scroll", onScroll, { passive: true });
+      } else cards.forEach((c) => c.style.removeProperty("--in"));
+    };
+    setup();
+    mq.addEventListener("change", setup);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
+      mq.removeEventListener("change", setup);
+    };
+  }, []);
+
   return (
     <div>
-      <ul ref={ref} className="pol-table -mx-(--gutter) flex snap-x gap-5 overflow-x-auto px-(--gutter) pb-6 lg:relative lg:mx-0 lg:block lg:h-[740px] lg:overflow-visible lg:px-0 lg:pb-0">
+      <ul ref={ref} className="pol-table -mx-(--gutter) flex snap-x gap-5 overflow-x-auto px-(--gutter) pb-6 lg:relative lg:mx-0 lg:block lg:h-[650px] lg:overflow-visible lg:px-0 lg:pb-0">
         {items.map((item, i) => {
           const sp = SPOTS[i % SPOTS.length];
           return (

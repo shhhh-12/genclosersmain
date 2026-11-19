@@ -1,251 +1,254 @@
 "use client";
 
 /**
- * "At GenClosers" as a live call you can tune (owner 2026-11-19). A three-stop switch, Train ·
- * Consult · Done for you: click a stop, use the arrow keys, or drag the red knob. Each stop says who
- * does what on the call ("You make the calls. We make you a closer."), the two voice lanes (You and
- * GenClosers) morph between the stops while you drag, and the offer's words and button swap with it.
- * No percentages (the owner felt they made the offers look smaller). It steps through the three by
- * itself until someone touches it, and holds still while the pointer or keyboard focus is on it, so it
- * never switches under someone who is reading. Reduced motion: no autoplay, still bars.
+ * "At GenClosers" (owner 2026-11-19, second version). The statement first ("Sales is not a talent.
+ * It's a system anyone can learn."), then the three ways to work together as big clicky tabs: Train ·
+ * Consult · Done for you. The red knob springs to the tab you click and stretches on the way (its
+ * leading edge moves first). Under the tabs the chosen way is split in two, side by side: what You do
+ * and what GenClosers does ("You make the calls. We make you a closer."); the words roll up like a
+ * counter when you switch, GenClosers a beat after You. GenClosers is always on it, no percentages.
+ * It steps through the three by itself (a thin line in the knob fills up first) until someone clicks,
+ * and holds while the pointer or keyboard focus is on it. Everything is stacked in one cell, so the
+ * panel never changes size. Reduced motion: no autoplay, no movement.
  */
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Arrow, WhatsApp } from "@/components/ui/Icons";
+import { LogoMark } from "@/components/brand/LogoMark";
+import { ScrollRead } from "@/components/motion/ScrollRead";
 import { useMotionAllowed } from "@/lib/useMotionAllowed";
 
 type Item = { label: string; title: string; body: string; you: string; us: string; line: string; link: string; href: string; external: boolean };
 
-const BARS = 48;
-// how much each voice is heard at each stop (Train, Consult, Done for you); GenClosers is always on the call
-const YOU = [1, 0.75, 0.28];
-const US = [0.6, 0.85, 1];
-const AUTO_MS = 4200;
-const at = (vals: number[], t: number) => {
-  const i = Math.min(vals.length - 2, Math.floor(t));
-  const f = t - i;
-  return vals[i] + (vals[i + 1] - vals[i]) * f;
-};
-// fixed pseudo-random bar shapes (same on server and client)
-const SHAPE = Array.from({ length: BARS }, (_, i) => {
-  const r = Math.sin(i * 12.9898 + 4.1) * 43758.5453;
-  const u = r - Math.floor(r);
-  return { h: 0.28 + 0.72 * Math.abs(Math.sin(i * 0.55 + u * 2)), d: (u * 1.2).toFixed(2), s: (0.85 + u * 0.6).toFixed(2) };
-});
+const AUTO_S = 5; // seconds on each way while it plays by itself
 
-export function ServicesCall({ heading, ask, lanes, live, items }: { heading: string; ask: string; lanes: { you: string; us: string }; live: string; items: Item[] }) {
+/** One ink line drawing per way, in the order of the tabs (viewBox 48): Train = a target hit dead
+ * centre (we make you a closer), Consult = three parts wired into one system, Done for you = sales
+ * rising without you on the call. Stroke = currentColor. */
+const ART = [
+  <g key="train">
+    <circle cx="22" cy="26" r="16" />
+    <circle cx="22" cy="26" r="9" />
+    <circle cx="22" cy="26" r="2.5" fill="currentColor" />
+    <path d="M22 26L40 8" />
+    <path d="M34 8h6v6" />
+  </g>,
+  <g key="consult">
+    <rect x="5" y="7" width="13" height="10" rx="2.5" />
+    <rect x="30" y="7" width="13" height="10" rx="2.5" />
+    <rect x="17.5" y="31" width="13" height="10" rx="2.5" />
+    <path d="M18 12h12" />
+    <path d="M11.5 17v6.5H24V31M36.5 17v6.5H24" />
+  </g>,
+  <g key="done">
+    <path d="M5 42h38" />
+    <path d="M11 42V32M21 42V26M31 42V20M41 42V12" />
+    <path d="M6 26l9-8 6 5 15-13" />
+    <path d="M30 10h6v6" />
+  </g>,
+];
+const Art = ({ i, className = "" }: { i: number; className?: string }) => (
+  <svg viewBox="0 0 48 48" aria-hidden fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" className={className}>
+    {ART[i % ART.length]}
+  </svg>
+);
+
+/** -1 before the active one, 0 the active one, 1 after it: the words roll up going forward */
+const place = (i: number, active: number) => (i < active ? "-translate-y-[105%] opacity-0" : i > active ? "translate-y-[105%] opacity-0" : "translate-y-0 opacity-100");
+
+export function ServicesCall({
+  statement,
+  keep,
+  heading,
+  ask,
+  lanes,
+  items,
+}: {
+  statement: string;
+  keep: string;
+  heading: string;
+  ask: string;
+  lanes: { you: string; us: string };
+  items: Item[];
+}) {
   const motion = useMotionAllowed();
-  const [t, setT] = useState(0); // 0..2, continuous while dragging
-  const target = useRef(0);
-  const cur = useRef(0);
-  const raf = useRef(0);
-  const touched = useRef(false);
-  const dragging = useRef(false);
-  const paused = useRef(false); // pointer over it, or keyboard focus inside it
-  const track = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(0);
+  const [dir, setDir] = useState(1);
+  const [touched, setTouched] = useState(false);
+  const [hold, setHold] = useState(false); // pointer over it or keyboard focus inside it
+  const [visible, setVisible] = useState(false);
+  const [round, setRound] = useState(0); // restarts the knob's line
   const root = useRef<HTMLElement>(null);
+  const tabs = useRef<(HTMLButtonElement | null)[]>([]);
   const n = items.length;
-  const active = Math.round(t);
 
-  // ease t toward its target (frame-rate independent)
-  const go = (to: number, instant = false) => {
-    target.current = Math.max(0, Math.min(n - 1, to));
-    cancelAnimationFrame(raf.current);
-    if (instant || !motion) {
-      cur.current = target.current;
-      setT(cur.current);
-      return;
-    }
-    let last = performance.now();
-    const step = (now: number) => {
-      const dt = Math.min(48, now - last);
-      last = now;
-      cur.current += (target.current - cur.current) * (1 - Math.exp(-dt / 90));
-      if (Math.abs(target.current - cur.current) < 0.002) cur.current = target.current;
-      setT(cur.current);
-      if (cur.current !== target.current) raf.current = requestAnimationFrame(step);
-    };
-    raf.current = requestAnimationFrame(step);
-  };
-
-  // it steps through the three by itself while on screen, until someone touches it
   useEffect(() => {
-    if (!motion) return;
-    let visible = false;
-    const io = new IntersectionObserver(([e]) => (visible = e.isIntersecting), { threshold: 0.4 });
+    const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0.35 });
     if (root.current) io.observe(root.current);
-    const id = window.setInterval(() => {
-      if (touched.current || !visible || dragging.current || paused.current) return;
-      go((Math.round(target.current) + 1) % n);
-    }, AUTO_MS);
-    return () => {
-      io.disconnect();
-      window.clearInterval(id);
-      cancelAnimationFrame(raf.current);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [motion, n]);
+    return () => io.disconnect();
+  }, []);
 
-  const fromPointer = (clientX: number) => {
-    const r = track.current?.getBoundingClientRect();
-    if (!r) return 0;
-    return ((clientX - r.left) / r.width) * n - 0.5;
-  };
-  const onDown = (e: React.PointerEvent) => {
-    touched.current = true;
-    dragging.current = true;
-    track.current?.setPointerCapture(e.pointerId);
-    go(fromPointer(e.clientX), true);
-  };
-  const onMove = (e: React.PointerEvent) => {
-    if (dragging.current) go(fromPointer(e.clientX), true);
-  };
-  const onUp = () => {
-    if (!dragging.current) return;
-    dragging.current = false;
-    go(Math.round(cur.current));
+  const pick = (i: number, byHand = true) => {
+    const to = (i + n) % n;
+    if (byHand) setTouched(true);
+    setDir(to >= active ? 1 : -1);
+    setActive(to);
+    setRound((r) => r + 1);
   };
   const onKey = (e: React.KeyboardEvent) => {
-    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    const to = e.key === "ArrowRight" ? active + 1 : e.key === "ArrowLeft" ? active - 1 : e.key === "Home" ? 0 : e.key === "End" ? n - 1 : null;
+    if (to === null) return;
     e.preventDefault();
-    touched.current = true;
-    go(Math.round(target.current) + (e.key === "ArrowRight" ? 1 : -1));
+    pick(to);
+    tabs.current[(to + n) % n]?.focus();
   };
 
+  const auto = motion && !touched;
   const it = items[active];
-  const voices = [
-    { name: lanes.you, role: it.you, amp: at(YOU, t), red: false },
-    { name: lanes.us, role: it.us, amp: at(US, t), red: true },
-  ];
+  const inset = "0.375rem";
+  const slot = "col-start-1 row-start-1 transition-[translate,opacity] duration-[650ms] ease-kick motion-reduce:transition-none";
 
   return (
     <section
       ref={root}
       className="section-pad"
-      onPointerEnter={() => (paused.current = true)}
-      onPointerLeave={() => (paused.current = false)}
-      onFocus={() => (paused.current = true)}
+      onPointerEnter={() => setHold(true)}
+      onPointerLeave={() => setHold(false)}
+      onFocus={() => setHold(true)}
       onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) paused.current = false;
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setHold(false);
       }}
     >
-      <div className="mx-auto grid max-w-(--container-page) gap-12 lg:grid-cols-12 lg:gap-10">
-        <div className="min-w-0 lg:col-span-5">
-          <h2 className="font-display text-h2 font-semibold tracking-[-0.03em]">{heading}</h2>
-          <p className="mt-6 text-lead text-mute-dark">{ask}</p>
+      <div className="mx-auto max-w-(--container-page)">
+        <h2 className="max-w-[17ch] font-display text-h1 font-semibold tracking-[-0.035em] text-balance">
+          <ScrollRead text={statement} keep={keep} />
+        </h2>
 
-          {/* the switch: click, arrow keys, or drag the red knob */}
-          <div
-            ref={track}
-            role="tablist"
-            aria-label={ask}
-            onKeyDown={onKey}
-            onPointerDown={onDown}
-            onPointerMove={onMove}
-            onPointerUp={onUp}
-            onPointerCancel={onUp}
-            className="relative mt-5 grid touch-none grid-cols-3 rounded-pill border border-ink-line bg-ink-2 p-1 select-none"
-          >
-            <span
-              aria-hidden
-              className="absolute top-1 bottom-1 rounded-pill bg-signal shadow-[0_10px_30px_-10px_rgb(227_16_27/0.8)]"
-              style={{ width: `calc((100% - 0.5rem) / ${n})`, left: `calc(0.25rem + (100% - 0.5rem) * ${(t / n).toFixed(4)})` }}
-            />
-            {items.map((x, i) => (
-              <button
-                key={x.label}
-                type="button"
-                role="tab"
-                id={`svc-tab-${i}`}
-                aria-selected={active === i}
-                aria-controls={`svc-panel-${i}`}
-                tabIndex={active === i ? 0 : -1}
-                onClick={() => {
-                  touched.current = true;
-                  go(i);
+        <div className="mt-16 border-t border-ink-line pt-12 lg:mt-24 lg:pt-16">
+          <div className="grid gap-8 lg:grid-cols-12 lg:items-end lg:gap-10">
+            <div className="min-w-0 lg:col-span-5">
+              <h3 className="font-display text-h2 font-semibold tracking-[-0.03em]">{heading}</h3>
+              <p className="mt-4 text-lead text-mute-dark">{ask}</p>
+            </div>
+
+            {/* the three ways: click, or arrow keys */}
+            <div role="tablist" aria-label={heading} onKeyDown={onKey} className="relative grid grid-cols-3 rounded-pill border border-ink-line bg-ink-2 p-1.5 select-none lg:col-span-7">
+              <span
+                aria-hidden
+                data-dir={dir}
+                className="svc-knob absolute top-1.5 bottom-1.5 overflow-hidden rounded-pill bg-signal shadow-[0_12px_32px_-10px_rgb(227_16_27/0.8)]"
+                style={{
+                  left: `calc(${inset} + (100% - 2 * ${inset}) * ${active / n})`,
+                  right: `calc(${inset} + (100% - 2 * ${inset}) * ${(n - 1 - active) / n})`,
                 }}
-                className={`relative z-10 cursor-pointer rounded-pill px-1 py-3 font-display text-[0.84rem] font-semibold whitespace-nowrap transition-colors duration-200 sm:px-2 sm:text-[1.05rem] ${active === i ? "text-signal-ink" : "text-mute-dark hover:text-paper"}`}
               >
-                {x.label}
-              </button>
-            ))}
+                {auto && (
+                  <span
+                    key={round}
+                    className="svc-tick absolute inset-x-6 bottom-1.5 h-[2px] origin-left rounded-full bg-signal-ink/70"
+                    style={{ animationDuration: `${AUTO_S}s`, animationPlayState: hold || !visible ? "paused" : "running" }}
+                    onAnimationEnd={() => pick(active + 1, false)}
+                  />
+                )}
+              </span>
+              {items.map((x, i) => (
+                <button
+                  key={x.label}
+                  ref={(el) => {
+                    tabs.current[i] = el;
+                  }}
+                  type="button"
+                  role="tab"
+                  id={`svc-tab-${i}`}
+                  aria-selected={active === i}
+                  aria-controls="svc-panel"
+                  tabIndex={active === i ? 0 : -1}
+                  onClick={() => pick(i)}
+                  className={`relative z-10 flex cursor-pointer items-center justify-center gap-2 rounded-pill px-1 py-4 font-display text-[0.9rem] font-semibold whitespace-nowrap transition-[color,scale] duration-200 ease-primary active:scale-[0.93] sm:px-3 sm:text-[1.2rem] ${active === i ? "text-signal-ink" : "text-mute-dark hover:text-paper"}`}
+                >
+                  <Art i={i} className={`hidden size-5 shrink-0 sm:block ${active === i ? "" : "opacity-70"}`} />
+                  {x.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* the chosen offer */}
-          <div className="mt-10 grid">
-            {items.map((x, i) => {
-              const on = active === i;
-              const cls = "group/link inline-flex items-center gap-2.5 font-display text-[1.0625rem] font-semibold text-paper transition-colors hover:text-signal";
-              const inner = (
-                <>
-                  {x.external && <WhatsApp className="h-4 w-4" />}
-                  <span className="border-b border-paper/30 pb-0.5 transition-colors group-hover/link:border-signal">{x.link}</span>
-                  <span className="text-signal transition-transform duration-450 ease-primary group-hover/link:translate-x-1">
-                    <Arrow />
-                  </span>
-                </>
-              );
-              return (
-                <div
-                  key={x.label}
-                  id={`svc-panel-${i}`}
-                  role="tabpanel"
-                  aria-labelledby={`svc-tab-${i}`}
-                  inert={!on}
-                  className={`col-start-1 row-start-1 transition-[opacity,transform] ease-primary ${on ? "opacity-100 duration-450 delay-150" : "pointer-events-none translate-y-2 opacity-0 duration-150"}`}
-                >
-                  <span className="font-mono text-small text-signal">0{i + 1}</span>
-                  <h3 className="mt-3 font-display text-h3 font-semibold tracking-[-0.02em]">{x.title}</h3>
-                  <p className="mt-3 max-w-[40ch] text-lead text-mute-dark">{x.body}</p>
-                  <div className="mt-7">
-                    {x.external ? (
-                      <a href={x.href} target="_blank" rel="noopener noreferrer" className={cls}>
-                        {inner}
-                      </a>
-                    ) : (
-                      <Link href={x.href} className={cls}>
-                        {inner}
-                      </Link>
-                    )}
+          {/* the chosen way, split: what you do, what we do */}
+          <div id="svc-panel" role="tabpanel" aria-labelledby={`svc-tab-${active}`} className="mt-6 overflow-hidden rounded-[1.75rem] border border-ink-line bg-ink-2">
+            <p className="sr-only">{it.line}</p>
+            <div aria-hidden className="grid lg:grid-cols-2">
+              {[
+                { name: lanes.you, roles: items.map((x) => x.you), red: false },
+                { name: lanes.us, roles: items.map((x) => x.us), red: true },
+              ].map((side, s) => (
+                <div key={side.name} className={`p-7 sm:p-10 ${s ? "border-t border-ink-line bg-signal/[0.07] lg:border-t-0 lg:border-l" : ""}`}>
+                  <div className={`flex items-center gap-2.5 font-display text-[1.125rem] font-semibold ${side.red ? "text-signal" : "text-paper/70"}`}>
+                    {side.red && <LogoMark className="h-[0.9em] w-auto" title="" />}
+                    {side.name}
+                  </div>
+                  <div className="mt-5 grid overflow-hidden sm:mt-8">
+                    {side.roles.map((r, i) => (
+                      <p
+                        key={i}
+                        className={`${slot} font-display text-[clamp(2rem,1.3rem+2.6vw,3.5rem)] leading-[1.02] font-semibold tracking-[-0.035em] ${side.red ? "text-signal" : "text-paper"} ${place(i, active)}`}
+                        style={{ transitionDelay: s ? "70ms" : "0ms" }}
+                      >
+                        {r}.
+                      </p>
+                    ))}
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* the call: who does what, and both voices on it */}
-        <div className="min-w-0 lg:col-span-7">
-          <div className="relative h-full overflow-hidden rounded-[1.75rem] border border-ink-line bg-ink-2 p-6 sm:p-9">
-            <div aria-hidden className="flex items-center gap-3 font-mono text-label tracking-[0.18em] text-mute-dark uppercase">
-              <span className="svc-live size-2.5 rounded-full bg-signal" />
-              {live}
-            </div>
-            {voices.map((v) => (
-              <div key={v.name} className="mt-8">
-                <div className="flex items-baseline justify-between gap-4">
-                  <span className={`shrink-0 font-display text-h3 font-semibold tracking-[-0.02em] ${v.red ? "text-signal" : ""}`}>{v.name}</span>
-                  <span className="min-w-0 truncate text-small text-paper/80">{v.role}</span>
-                </div>
-                <div aria-hidden className="mt-4 flex h-20 items-center justify-between sm:h-24" style={{ ["--amp" as string]: v.amp.toFixed(3) }}>
-                  {SHAPE.map((b, i) => (
-                    <span
-                      key={i}
-                      className={`svc-bar h-full w-[3px] shrink-0 rounded-full sm:w-1 ${v.red ? "bg-signal" : "bg-paper"}`}
-                      style={{ ["--h" as string]: b.h.toFixed(3), animationDelay: `-${b.d}s`, animationDuration: `${b.s}s` }}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
-            {/* every stop's line is in the same cell, so the panel keeps the height of the longest one */}
-            <div className="mt-9 grid border-t border-ink-line pt-6">
-              {items.map((x, i) => (
-                <p key={x.label} aria-hidden={i !== active} className={`col-start-1 row-start-1 font-display text-h3 leading-tight font-semibold tracking-[-0.02em] text-paper transition-opacity duration-300 ${i === active ? "opacity-100" : "opacity-0"}`}>
-                  {x.line}
-                </p>
               ))}
+            </div>
+
+            {/* the offer and its way in */}
+            <div className="grid border-t border-ink-line">
+              {items.map((x, i) => {
+                const on = active === i;
+                const cls = "group/link inline-flex items-center gap-2.5 rounded-pill bg-paper px-6 py-3 font-display text-[1.0625rem] font-semibold text-ink transition-colors duration-450 hover:bg-signal hover:text-signal-ink";
+                const inner = (
+                  <>
+                    {x.external && <WhatsApp className="h-4 w-4" />}
+                    {x.link}
+                    <span className="transition-transform duration-450 ease-primary group-hover/link:translate-x-1">
+                      <Arrow />
+                    </span>
+                  </>
+                );
+                return (
+                  <div
+                    key={x.label}
+                    inert={!on}
+                    className={`col-start-1 row-start-1 flex flex-col gap-6 p-7 transition-[opacity,translate] ease-primary motion-reduce:transition-none sm:p-10 lg:flex-row lg:items-end lg:justify-between ${on ? "opacity-100 delay-150 duration-450" : "pointer-events-none translate-y-2 opacity-0 duration-150"}`}
+                  >
+                    <div className="flex min-w-0 items-start gap-5 sm:gap-6">
+                      {/* the way's drawing: pops in with its tab */}
+                      <span
+                        aria-hidden
+                        className={`grid size-16 shrink-0 place-items-center rounded-2xl border border-signal/30 bg-signal/10 text-signal transition-[scale,rotate] duration-[650ms] ease-kick motion-reduce:transition-none sm:size-20 ${on ? "scale-100 rotate-0" : "scale-75 -rotate-12"}`}
+                      >
+                        <Art i={i} className="size-9 sm:size-11" />
+                      </span>
+                      <div className="min-w-0">
+                        <h4 className="font-display text-h3 font-semibold tracking-[-0.02em]">{x.title}</h4>
+                        <p className="mt-2 max-w-[52ch] text-mute-dark">{x.body}</p>
+                      </div>
+                    </div>
+                    <div className="shrink-0">
+                      {x.external ? (
+                        <a href={x.href} target="_blank" rel="noopener noreferrer" className={cls}>
+                          {inner}
+                        </a>
+                      ) : (
+                        <Link href={x.href} className={cls}>
+                          {inner}
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

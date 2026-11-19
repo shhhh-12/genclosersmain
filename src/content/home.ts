@@ -116,11 +116,13 @@ export const home = {
   // What we do (owner's sample site, 2026-11-19). Consult and Done for you have no pages yet:
   // their links open WhatsApp.
   services: {
+    // owner 2026-11-19: the statement above "At GenClosers"
+    statement: "Sales is not a talent. It's a system anyone can learn.",
+    statementKeep: "a system anyone can learn.",
     heading: "At GenClosers",
     // UI copy for the interactive call (owner 2026-11-19: say who does what, "you do X, we do Y";
     // no percentages). Offer titles, bodies and links: the owner's sample site.
-    ask: "Pick how we work together.",
-    live: "On the call",
+    ask: "Three ways to work with us. Pick one.",
     lanes: { you: "You", us: "GenClosers" },
     items: [
       {
@@ -146,8 +148,9 @@ export const home = {
   // blurred). Line under the heading: the YouTube channel's own description. YouTube numbers as on
   // the channel page on 2026-11-19: update them when they change.
   proofWall: {
-    heading: "Why we do this.",
-    sub: "Driven by a vision to teach sales as a life skill for every single Indian.",
+    // owner 2026-11-19: "more interesting" (the old line now opens the About page)
+    heading: "We do this for messages like these.",
+    sub: "Real notes people sent after a GenClosers video or session, pinned next to the rooms we teach in.",
     dragHint: "Drag the cards", // UI copy
     youtube: {
       href: "https://www.youtube.com/@GenClosers",
@@ -192,17 +195,21 @@ export const home = {
   ] satisfies Card[],
 
   audience: {
-    heading: "Built for anyone who has to convince someone of something.",
+    // owner 2026-11-19: the line above the heading (the course's own definition of sales)
+    quote: "Sales is all about helping a friend who is in need.",
+    heading: "Everyone sells something to someone.",
+    sub: "But most of us were never taught how.",
     // UI copy (owner 2026-11-19): two ways on. "Work with us" opens WhatsApp until the business pages exist.
     cta: { work: "Work with us", courses: "See courses" },
     sticker: "That's me", // UI copy: the sticker on a polaroid you hover
     dragHint: "Drag the cards", // UI copy
+    // order matches the drawings in AudiencePolaroids.tsx (cap, bulb, shop, laptop, phone)
     items: [
-      { title: "Students", body: "Learn the one skill college never taught you, before your career starts." },
-      { title: "Aspiring entrepreneurs", body: "Your idea needs customers. Learn how to talk to them before you launch." },
-      { title: "Business owners", body: "Stop guessing on sales calls. Understand selling well enough to do it and to lead the people who do it for you." },
-      { title: "Freelancers", body: "Turn enquiries into paid projects without dropping your rate or chasing clients." },
-      { title: "Salespeople", body: "Swap pressure and memorised lines for a process that holds up on every call." },
+      { title: "Student", body: "Sells their skills to an interviewer." },
+      { title: "Entrepreneur", body: "Sells an idea to their first customer." },
+      { title: "Business owner", body: "Sells a vision to the market." },
+      { title: "Freelancer", body: "Sells their work to a client." },
+      { title: "Salespeople", body: "Forced to sell a product." },
     ] satisfies Card[],
   },
 

@@ -9,6 +9,7 @@
  * the card's top right. Phones: a swipeable row. YouTube and Instagram sit beside the heading.
  */
 
+import { ScrollRead } from "@/components/motion/ScrollRead";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePolaroidDrag } from "@/lib/usePolaroidDrag";
@@ -140,69 +141,10 @@ export function ProofWall({ heading, sub, dragHint, youtube, instagram, copy, it
   return (
     <section className="on-paper section-pad">
       <div className="mx-auto max-w-(--container-page)">
-        <div className="grid gap-10 lg:grid-cols-12 lg:items-end">
-          <div className="lg:col-span-5">
-            <h2 className="font-display text-h2 font-semibold tracking-[-0.03em] text-balance">{heading}</h2>
-            <p className="mt-4 max-w-[42ch] text-lead text-mute-light">{sub}</p>
-          </div>
-          {/* where the messages come from: the channel and Monish's Instagram */}
-          <div className="grid gap-5 sm:grid-cols-2 lg:col-span-7">
-            <a href={youtube.href} target="_blank" rel="noopener noreferrer" className={channel}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={youtube.banner.src} alt="" width={youtube.banner.width} height={youtube.banner.height} loading="lazy" className="block h-auto w-full" />
-              <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-                <span className="flex items-center gap-3">
-                  <span className="grid size-9 place-items-center rounded-full bg-signal text-signal-ink">
-                    <Play className="ml-0.5 size-4" />
-                  </span>
-                  <span>
-                    <span className="block font-display font-semibold">{youtube.handle}</span>
-                    <span className="block text-small text-mute-dark">{youtube.stats}</span>
-                  </span>
-                </span>
-                {go(youtube.cta)}
-              </div>
-            </a>
-            <a href={instagram.href} target="_blank" rel="noopener noreferrer" className={`${channel} px-5 py-4`}>
-              <span className="flex items-center gap-4">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={instagram.photo} alt={instagram.name} width={256} height={256} loading="lazy" className="size-14 shrink-0 rounded-full" />
-                <span className="min-w-0">
-                  <span className="flex items-center gap-1.5 font-display font-semibold">
-                    {instagram.handle}
-                    {/* verified on Instagram */}
-                    <svg viewBox="0 0 24 24" className="size-4 shrink-0 text-[#3897f0]" aria-hidden>
-                      <path fill="currentColor" d="M12 1.5l2.6 1.9 3.2-.2 1 3.1 2.7 1.8-1 3.1 1 3.1-2.7 1.8-1 3.1-3.2-.2L12 22.5l-2.6-1.9-3.2.2-1-3.1-2.7-1.8 1-3.1-1-3.1 2.7-1.8 1-3.1 3.2.2z" />
-                      <path d="M8 12.3l2.6 2.6L16.2 9.3" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </span>
-                  <span className="block truncate text-small text-mute-dark">{instagram.name}</span>
-                  <span className="block text-small text-paper/85">{instagram.stats}</span>
-                </span>
-              </span>
-              <span className="mt-3 block space-y-0.5 text-small text-paper/80">
-                {instagram.bio.map((b) => (
-                  <span key={b.text} className="block">
-                    {b.rupee ? (
-                      <>
-                        {b.text.split("₹")[0]}
-                        <span className="sr-only">₹</span>
-                        <Rupee className="inline-block h-[0.72em] w-auto align-[0.02em]" />
-                        {b.text.split("₹")[1]}
-                      </>
-                    ) : (
-                      b.text
-                    )}
-                  </span>
-                ))}
-              </span>
-              <span className="mt-3 flex items-center justify-between gap-3">
-                <InstagramIcon className="size-5 text-paper/70" />
-                {go(instagram.cta)}
-              </span>
-            </a>
-          </div>
-        </div>
+        <h2 className="max-w-[18ch] font-display text-h2 font-semibold tracking-[-0.03em] text-balance">
+          <ScrollRead text={heading} />
+        </h2>
+        <p className="mt-4 max-w-[42ch] text-lead text-mute-light">{sub}</p>
 
         <ul ref={table} className="pol-table -mx-(--gutter) mt-14 flex snap-x items-start gap-5 overflow-x-auto px-(--gutter) pt-5 pb-8 lg:relative lg:mx-0 lg:mt-16 lg:block lg:h-[940px] lg:overflow-visible lg:px-0 lg:pt-0 lg:pb-0">
           {items.map((it, i) => {
@@ -256,6 +198,63 @@ export function ProofWall({ heading, sub, dragHint, youtube, instagram, copy, it
           })}
         </ul>
         <p className="eyebrow mt-4 hidden text-mute-light lg:block">{dragHint}</p>
+        {/* under the polaroids (owner 2026-11-19): where the messages come from, the channel and Monish's Instagram */}
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:mt-14 lg:max-w-[52rem]">
+          <a href={youtube.href} target="_blank" rel="noopener noreferrer" className={channel}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={youtube.banner.src} alt="" width={youtube.banner.width} height={youtube.banner.height} loading="lazy" className="block h-auto w-full" />
+            <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+              <span className="flex items-center gap-3">
+                <span className="grid size-9 place-items-center rounded-full bg-signal text-signal-ink">
+                  <Play className="ml-0.5 size-4" />
+                </span>
+                <span>
+                  <span className="block font-display font-semibold">{youtube.handle}</span>
+                  <span className="block text-small text-mute-dark">{youtube.stats}</span>
+                </span>
+              </span>
+              {go(youtube.cta)}
+            </div>
+          </a>
+          <a href={instagram.href} target="_blank" rel="noopener noreferrer" className={`${channel} px-5 py-4`}>
+            <span className="flex items-center gap-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={instagram.photo} alt={instagram.name} width={256} height={256} loading="lazy" className="size-14 shrink-0 rounded-full" />
+              <span className="min-w-0">
+                <span className="flex items-center gap-1.5 font-display font-semibold">
+                  {instagram.handle}
+                  {/* verified on Instagram */}
+                  <svg viewBox="0 0 24 24" className="size-4 shrink-0 text-[#3897f0]" aria-hidden>
+                    <path fill="currentColor" d="M12 1.5l2.6 1.9 3.2-.2 1 3.1 2.7 1.8-1 3.1 1 3.1-2.7 1.8-1 3.1-3.2-.2L12 22.5l-2.6-1.9-3.2.2-1-3.1-2.7-1.8 1-3.1-1-3.1 2.7-1.8 1-3.1 3.2.2z" />
+                    <path d="M8 12.3l2.6 2.6L16.2 9.3" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
+                <span className="block truncate text-small text-mute-dark">{instagram.name}</span>
+                <span className="block text-small text-paper/85">{instagram.stats}</span>
+              </span>
+            </span>
+            <span className="mt-3 block space-y-0.5 text-small text-paper/80">
+              {instagram.bio.map((b) => (
+                <span key={b.text} className="block">
+                  {b.rupee ? (
+                    <>
+                      {b.text.split("₹")[0]}
+                      <span className="sr-only">₹</span>
+                      <Rupee className="inline-block h-[0.72em] w-auto align-[0.02em]" />
+                      {b.text.split("₹")[1]}
+                    </>
+                  ) : (
+                    b.text
+                  )}
+                </span>
+              ))}
+            </span>
+            <span className="mt-3 flex items-center justify-between gap-3">
+              <InstagramIcon className="size-5 text-paper/70" />
+              {go(instagram.cta)}
+            </span>
+          </a>
+        </div>
       </div>
 
       {/* the close view: the picture grows out of its card (on top of everything, header included) */}

@@ -1,77 +1,131 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ScrollRead } from "@/components/motion/ScrollRead";
 import { Reveal } from "@/components/motion/Reveal";
-import { Arrow, WhatsApp } from "@/components/ui/Icons";
+import { Arrow } from "@/components/ui/Icons";
+import { Closing } from "@/components/home/HomeSections";
+import { Develop } from "@/components/about/Develop";
+import { AboutRoom } from "@/components/about/AboutRoom";
 import { about } from "@/content/about";
-import { listedCourses } from "@/content/courses";
-import { site } from "@/content/site";
+import { home } from "@/content/home";
 
 export const metadata: Metadata = {
   title: about.title,
   description: about.body,
 };
 
-/** About: who we are, mission and vision, the two founders, and the ways on. */
+/**
+ * About (owner 2026-11-19, from the audit in docs/about-audit-2026-11-19.md). Sections alternate
+ * black / white: hero with the workshop photo (black) -> Mission and Vision as
+ * today -> tomorrow pairs (white) -> the founders, big polaroids that develop (black) -> In the room
+ * (white) -> the home closing band (black).
+ */
 export default function AboutPage() {
-  const course = listedCourses[0];
+  const proof = home.proofWall;
   return (
     <>
       <SiteHeader />
       <main>
-        {/* who we are */}
-        <section className="px-(--gutter) pt-36 pb-(--section-y) sm:pt-44">
-          <div className="mx-auto max-w-(--container-page)">
-            <h1 className="max-w-[14ch] font-display text-mega leading-[0.95] font-semibold tracking-[-0.045em] text-balance">
-              <ScrollRead text={about.heading} auto keep={about.keep} />
-            </h1>
-            <Reveal delay={0.15}>
-              <p className="mt-8 max-w-[52ch] text-lead text-mute-dark">{about.body}</p>
+        {/* who we are: the vision line and the room it happens in (owner 2026-11-19: no numbers band here) */}
+        <section className="px-(--gutter) pt-32 pb-(--section-y) sm:pt-40">
+          <div className="mx-auto grid max-w-(--container-page) items-center gap-14 lg:grid-cols-12 lg:gap-10">
+            <div className="min-w-0 lg:col-span-7">
+              <h1 className="font-display text-h1 font-semibold tracking-[-0.035em] text-balance">
+                <ScrollRead text={about.heading} auto keep={about.keep} />
+              </h1>
+              <Reveal delay={0.15}>
+                <p className="mt-8 max-w-[48ch] text-lead text-mute-dark">{about.body}</p>
+              </Reveal>
+            </div>
+            <Reveal delay={0.25} className="lg:col-span-5">
+              <figure className="mx-auto w-full max-w-[30rem] rotate-[3deg] rounded-[6px] border-[2.5px] border-ink bg-white p-3 pb-4 text-ink shadow-[10px_12px_0_0_rgba(0,0,0,0.6)]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={about.photo.src} alt={about.photo.alt} width={about.photo.width} height={about.photo.height} className="block h-auto w-full rounded-[3px]" />
+                <figcaption className="mt-3 font-display text-[1.1rem] font-semibold tracking-[-0.01em]">{about.photo.caption}</figcaption>
+              </figure>
             </Reveal>
           </div>
         </section>
 
-        {/* mission and vision: two short lists on paper */}
+        {/* mission = today, vision = tomorrow: three pairs, a red line draws across each as it scrolls in */}
         <section className="on-paper section-pad">
-          <div className="mx-auto grid max-w-(--container-page) gap-16 md:grid-cols-2 md:gap-12">
-            {[about.mission, about.vision].map((block, bi) => (
-              <div key={block.title} className={bi === 1 ? "md:pt-24" : ""}>
-                <h2 className="font-display text-h2 font-semibold tracking-[-0.03em]">
-                  <ScrollRead text={block.title} />
-                </h2>
-                <ol className="mt-8 space-y-6">
-                  {block.items.map((item, i) => (
-                    <Reveal key={item} as="li" delay={i * 0.07} className="flex gap-5 border-t border-paper-line pt-5">
-                      <span className="pt-1 font-mono text-label text-signal">{String(i + 1).padStart(2, "0")}</span>
-                      <span className="max-w-[40ch] text-lead text-ink">{item}</span>
-                    </Reveal>
-                  ))}
-                </ol>
-              </div>
-            ))}
+          <div className="mx-auto max-w-(--container-page)">
+            <h2 className="font-display text-h2 font-semibold tracking-[-0.03em]">
+              <ScrollRead text={about.pairsHeading} />
+            </h2>
+            <div aria-hidden className="mt-12 hidden grid-cols-[1fr_7rem_1fr] gap-6 border-b border-paper-line pb-4 md:grid">
+              <p className="font-display text-[1.25rem] font-semibold">
+                {about.mission.title} <span className="text-mute-light">· {about.today}</span>
+              </p>
+              <span />
+              <p className="font-display text-[1.25rem] font-semibold">
+                {about.vision.title} <span className="text-mute-light">· {about.tomorrow}</span>
+              </p>
+            </div>
+            <ol className="mt-8 md:mt-0">
+              {about.pairs.map(([m, v], i) => (
+                <li key={i} className="pair grid gap-4 border-b border-paper-line py-8 md:grid-cols-[1fr_7rem_1fr] md:items-center md:gap-6 md:py-10">
+                  <div>
+                    <p className="font-display text-[1rem] font-semibold text-mute-light md:hidden">
+                      {about.mission.title} · {about.today}
+                    </p>
+                    <p className="mt-1 max-w-[34ch] text-lead text-ink md:mt-0">{about.mission.items[m]}</p>
+                  </div>
+                  {/* the line from today to tomorrow (down on phones, across on desktop) */}
+                  <span aria-hidden className="pair-line flex items-center text-signal md:h-6">
+                    <span className="pair-stroke block h-10 w-[2px] bg-signal md:h-[2px] md:w-full" />
+                    <span className="pair-head hidden md:block">
+                      <Arrow className="h-3.5 w-4" />
+                    </span>
+                  </span>
+                  <div>
+                    <p className="font-display text-[1rem] font-semibold text-mute-light md:hidden">
+                      {about.vision.title} · {about.tomorrow}
+                    </p>
+                    <p className="mt-1 max-w-[34ch] font-display text-[clamp(1.35rem,1rem+1vw,1.75rem)] leading-snug font-semibold tracking-[-0.02em] text-ink md:mt-0">
+                      {about.vision.items[v]}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
           </div>
         </section>
 
-        {/* the founders: two people, offset (not two equal boxes) */}
+        {/* the founders: one row each, photo sides swapped, every line level */}
         <section className="section-pad">
           <div className="mx-auto max-w-(--container-page)">
             <h2 className="max-w-[16ch] font-display text-h1 font-semibold tracking-[-0.035em] text-balance">
               <ScrollRead text={about.foundersHeading} />
             </h2>
-            <div className="mt-16 grid gap-20 md:grid-cols-2 md:gap-12">
+            <div className="mt-16 space-y-20 md:space-y-28">
               {about.founders.map((f, fi) => (
-                <Reveal key={f.name} className={fi === 1 ? "md:mt-32" : ""}>
-                  <article>
-                    <div className="w-full max-w-[20rem] overflow-hidden rounded-2xl border border-ink-line bg-ink-2">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={f.photo.src} alt={f.name} width={f.photo.width} height={f.photo.height} className="block aspect-[4/5] w-full object-cover object-top grayscale" />
-                    </div>
-                    <h3 className="mt-7 font-display text-h2 font-semibold tracking-[-0.03em]">{f.name}</h3>
-                    {f.knownAs && <p className="mt-2 font-display text-[1.125rem] font-semibold text-signal">{f.knownAs}</p>}
-                    <p className="mt-3 text-small text-mute-dark">{f.role}</p>
-                    <ul className="mt-6 space-y-3 border-t border-ink-line pt-6">
+                <article key={f.name} className="grid items-center gap-10 md:grid-cols-12 md:gap-12">
+                  <Develop className={`md:col-span-5 ${fi % 2 ? "md:order-2" : ""}`}>
+                    <figure className={`relative mx-auto w-full max-w-[24rem] rounded-[6px] border-[2.5px] border-ink bg-white p-3 pb-10 shadow-[10px_12px_0_0_rgba(0,0,0,0.6)] ${fi % 2 ? "rotate-[2.5deg]" : "-rotate-[2.5deg]"}`}>
+                      <div className="develop-photo overflow-hidden rounded-[3px] bg-paper-2">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={f.photo.src} alt={f.name} width={f.photo.width} height={f.photo.height} className="block aspect-square w-full object-cover object-top" />
+                      </div>
+                      {f.knownAs && (
+                        <span className="absolute -top-6 -right-6 grid size-[5.5rem] rotate-[12deg] place-items-center rounded-full border-[2.5px] border-ink bg-signal p-2 text-center font-display text-[0.95rem] leading-[1.05] font-bold text-signal-ink">
+                          {f.knownAs}
+                        </span>
+                      )}
+                    </figure>
+                  </Develop>
+                  <div className={`min-w-0 md:col-span-7 ${fi % 2 ? "md:order-1" : ""}`}>
+                    <h3 className="font-display text-h2 font-semibold tracking-[-0.03em]">{f.name}</h3>
+                    <p className="mt-3 text-mute-dark">{f.role}</p>
+                    <ul aria-label="Companies" className="mt-6 flex flex-wrap gap-2">
+                      {f.brands.map((b) => (
+                        <li key={b} className="rounded-pill border border-ink-line bg-ink-2 px-3.5 py-1.5 font-display text-small font-semibold text-paper/90">
+                          {b}
+                        </li>
+                      ))}
+                    </ul>
+                    <ul className="mt-7 space-y-3 border-t border-ink-line pt-6">
                       {f.bio.map((line) => (
                         <li key={line} className="flex gap-3 text-paper/85">
                           <span className="mt-1.5 shrink-0 text-signal">
@@ -81,32 +135,26 @@ export default function AboutPage() {
                         </li>
                       ))}
                     </ul>
-                  </article>
-                </Reveal>
+                  </div>
+                </article>
               ))}
             </div>
           </div>
         </section>
 
-        {/* the ways on */}
-        <section className="section-pad border-t border-ink-line">
-          <div className="mx-auto flex max-w-(--container-page) flex-col gap-10 md:flex-row md:items-end md:justify-between">
-            <h2 className="max-w-[16ch] font-display text-h2 font-semibold tracking-[-0.03em] text-balance">
-              <ScrollRead text={about.next.heading} />
+        {/* in the room: the workshops and what people wrote */}
+        <section className="on-paper section-pad">
+          <div className="mx-auto max-w-(--container-page)">
+            <h2 className="font-display text-h2 font-semibold tracking-[-0.03em]">
+              <ScrollRead text={about.room.heading} />
             </h2>
-            <div className="flex flex-wrap items-center gap-x-10 gap-y-5">
-              <Link href={`/courses/${course.slug}`} className="group inline-flex items-center gap-3 font-display text-[1.125rem] font-medium text-paper">
-                <span className="border-b border-paper/30 pb-0.5 transition-colors group-hover:border-signal group-hover:text-signal">{about.next.course}</span>
-                <span className="text-signal transition-transform duration-450 ease-primary group-hover:translate-x-1">
-                  <Arrow />
-                </span>
-              </Link>
-              <a href={site.whatsapp.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 font-display text-[1.125rem] font-medium text-paper transition-colors hover:text-signal">
-                <WhatsApp /> {about.next.talk}
-              </a>
+            <div className="mt-12">
+              <AboutRoom items={about.room.items.map((i) => proof.items[i])} workshop={proof.copy.workshop} dragHint={proof.dragHint} />
             </div>
           </div>
         </section>
+
+        <Closing dark />
       </main>
       <SiteFooter />
     </>

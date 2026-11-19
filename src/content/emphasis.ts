@@ -2,7 +2,13 @@
 // Keyed by the heading text (exact). Headings not listed keep one weight.
 export const emphasis: Record<string, string> = {
   "Sales is a human conversation, not a manipulation game.": "human conversation,",
-  "Built for anyone who has to convince someone of something.": "convince",
+  "Everyone sells something to someone.": "someone.",
+  "Driven by a vision to teach sales as a life skill for every single Indian.": "a life skill",
+  "Mission and Vision.": "Vision.",
+  "In the room.": "room.",
+  "We do this for messages like these.": "messages like these.",
+  "Sales is all about helping a friend who is in need.": "helping a friend",
+  "Sales is not a talent. It's a system anyone can learn.": "a system anyone can learn.",
   "Sales is not a talent. It is a system you can learn.": "a system you can learn.",
   "Building India's Sales Revolution.": "Sales Revolution.",
   "What you get": "you get",

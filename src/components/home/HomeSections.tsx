@@ -57,40 +57,31 @@ export function Proof() {
           <p className="mt-6 max-w-[48ch] text-lead text-mute-dark">
             <ScrollRead text={pr.body} scene={[0.3, 0.85]} soft />
           </p>
-          <Link
-            href={`/courses/${listedCourses[0].slug}`}
-            className="group mt-8 inline-flex items-center gap-3 rounded-pill bg-signal px-7 py-3.5 font-display text-[1.125rem] font-semibold text-signal-ink shadow-[0_14px_40px_-14px_rgb(227_16_27/0.7)] transition-[background-color,transform] duration-450 ease-primary hover:-translate-y-0.5 hover:bg-signal-deep"
-          >
-            {home.seeCourse}
-            <span className="transition-transform duration-450 ease-primary group-hover:translate-x-1">
-              <Arrow />
-            </span>
-          </Link>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link
+              href={`/courses/${listedCourses[0].slug}`}
+              className="group inline-flex items-center gap-3 rounded-pill bg-signal px-7 py-3.5 font-display text-[1.125rem] font-semibold text-signal-ink shadow-[0_14px_40px_-14px_rgb(227_16_27/0.7)] transition-[background-color,transform] duration-450 ease-primary hover:-translate-y-0.5 hover:bg-signal-deep"
+            >
+              {home.seeCourse}
+              <span className="transition-transform duration-450 ease-primary group-hover:translate-x-1">
+                <Arrow />
+              </span>
+            </Link>
+            {/* for businesses (owner 2026-11-19, from the sample's two hero buttons): the course stays the main one */}
+            <a
+              href={site.whatsapp.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2.5 rounded-pill border border-paper/25 px-7 py-3.5 font-display text-[1.125rem] font-semibold text-paper transition-colors duration-450 hover:border-signal hover:text-signal"
+            >
+              <WhatsApp /> {home.closing.work}
+            </a>
+          </div>
         </div>
         <IndiaDots label={pr.mapLabel} className="mx-auto w-full max-w-[26rem] lg:col-span-5" />
       </div>
       {/* the numbers, as a band at the foot of the same screen */}
-      <dl className="mx-auto grid w-full max-w-(--container-page) grid-cols-2 border-y border-ink-line sm:grid-cols-3">
-        {pr.stats.map((s, i) => (
-          <div
-            key={s.label}
-            className={`flex flex-col-reverse justify-end py-6 ${
-              i === 0 ? "col-span-2 sm:col-span-1 sm:pr-8" : i === 1 ? "border-t border-ink-line pr-4 sm:border-t-0 sm:border-l sm:px-8" : "border-t border-l border-ink-line pl-5 sm:border-t-0 sm:px-8"
-            }`}
-          >
-            <dt className="mt-2 max-w-[24ch] text-small text-mute-dark">{s.label}</dt>
-            <dd className="font-display text-[clamp(2.5rem,4.2vw,4rem)] leading-[0.9] font-bold tracking-[-0.045em] whitespace-nowrap">
-              {s.rupee && (
-                <>
-                  <span className="sr-only">₹</span>
-                  <Rupee className="mr-[0.04em] inline-block h-[0.72em] w-auto align-[0.02em] text-signal" />
-                </>
-              )}
-              <CountUp to={s.value} suffix={s.suffix} />
-            </dd>
-          </div>
-        ))}
-      </dl>
+      <NumbersBand />
       {/* desktop, while the screen holds: how to move on (fades once India is red) */}
       <p aria-hidden className="dots-cue pointer-events-none absolute top-28 right-(--gutter) hidden flex-col items-center gap-2 font-mono text-label tracking-[0.2em] text-mute-dark uppercase [@media(min-width:1024px)_and_(min-height:840px)]:flex">
         <svg viewBox="0 0 24 36" className="h-8 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -100,6 +91,34 @@ export function Proof() {
         {home.proof.scrollCue}
       </p>
     </section>
+  );
+}
+
+/** The founders' numbers as a band (count up in view): the foot of the India screen, and the About hero. */
+export function NumbersBand() {
+  const pr = home.proof;
+  return (
+    <dl className="mx-auto grid w-full max-w-(--container-page) grid-cols-2 border-y border-ink-line sm:grid-cols-3">
+      {pr.stats.map((s, i) => (
+        <div
+          key={s.label}
+          className={`flex flex-col-reverse justify-end py-6 ${
+            i === 0 ? "col-span-2 sm:col-span-1 sm:pr-8" : i === 1 ? "border-t border-ink-line pr-4 sm:border-t-0 sm:border-l sm:px-8" : "border-t border-l border-ink-line pl-5 sm:border-t-0 sm:px-8"
+          }`}
+        >
+          <dt className="mt-2 max-w-[24ch] text-small text-mute-dark">{s.label}</dt>
+          <dd className="font-display text-[clamp(2.5rem,4.2vw,4rem)] leading-[0.9] font-bold tracking-[-0.045em] whitespace-nowrap">
+            {s.rupee && (
+              <>
+                <span className="sr-only">₹</span>
+                <Rupee className="mr-[0.04em] inline-block h-[0.72em] w-auto align-[0.02em] text-signal" />
+              </>
+            )}
+            <CountUp to={s.value} suffix={s.suffix} />
+          </dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 
@@ -133,12 +152,23 @@ export function Audience() {
   const a = home.audience;
   return (
     <section className="on-paper section-pad">
-      <div className="mx-auto grid max-w-(--container-page) grid-cols-1 gap-10 lg:grid-cols-12">
+      {/* the line above it all (owner 2026-11-19) */}
+      <figure className="mx-auto mb-10 max-w-(--container-page) border-b border-paper-line pb-10 lg:mb-14 lg:pb-14">
+        <blockquote className="max-w-[20ch] font-display text-h1 font-semibold tracking-[-0.035em] text-balance">
+          <span aria-hidden>&ldquo;</span>
+          <ScrollRead text={a.quote} />
+          <span aria-hidden>&rdquo;</span>
+        </blockquote>
+      </figure>
+      {/* the heading and the polaroids hold together for about one scroll while the cards land (owner 2026-11-19) */}
+      <div data-aud-scene>
+      <div className="aud-stage mx-auto grid max-w-(--container-page) grid-cols-1 gap-10 lg:grid-cols-12">
         <div className="min-w-0 lg:col-span-5">
-          <div className="lg:sticky lg:top-28">
+          <div className="aud-inner lg:sticky lg:top-28">
             <h2 className="font-display text-h2 font-semibold tracking-[-0.03em] text-balance">
               <ScrollRead text={a.heading} />
             </h2>
+            <p className="mt-6 max-w-[32ch] text-lead text-mute-light">{a.sub}</p>
             {/* two ways on (owner 2026-11-19) */}
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/courses" className="group inline-flex items-center gap-2.5 rounded-pill bg-signal px-6 py-3 font-display font-semibold text-signal-ink transition-colors duration-450 hover:bg-signal-deep">
@@ -156,6 +186,8 @@ export function Audience() {
         <div className="min-w-0 lg:col-span-7">
           <AudiencePolaroids items={a.items} sticker={a.sticker} dragHint={a.dragHint} />
         </div>
+      </div>
+      <div aria-hidden className="aud-spacer" />
       </div>
     </section>
   );
@@ -270,10 +302,10 @@ export function People() {
 }
 
 /** Closing band: one line and the two ways on. */
-export function Closing() {
+export function Closing({ dark = false }: { /** on ink (About page, to keep black / white alternating) */ dark?: boolean }) {
   const c = home.closing;
   return (
-    <section className="on-paper section-pad">
+    <section className={`section-pad ${dark ? "border-t border-ink-line" : "on-paper"}`}>
       <div className="mx-auto flex max-w-(--container-page) flex-col gap-10 md:flex-row md:items-end md:justify-between">
         <h2 className="max-w-[14ch] font-display text-h1 font-semibold tracking-[-0.035em] text-balance">
           <ScrollRead text={c.heading} />
@@ -285,7 +317,7 @@ export function Closing() {
               <Arrow />
             </span>
           </Link>
-          <a href={site.whatsapp.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2.5 rounded-pill border border-ink/25 px-7 py-3.5 font-display text-[1.125rem] font-semibold text-ink transition-colors duration-450 hover:border-signal hover:text-signal">
+          <a href={site.whatsapp.link} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center gap-2.5 rounded-pill border px-7 py-3.5 font-display text-[1.125rem] font-semibold transition-colors duration-450 hover:border-signal hover:text-signal ${dark ? "border-paper/25 text-paper" : "border-ink/25 text-ink"}`}>
             <WhatsApp /> {c.work}
           </a>
         </div>
@@ -294,15 +326,16 @@ export function Closing() {
   );
 }
 
-/** What we do: Train / Consult / Done for you as a live call you tune (components/home/ServicesCall.tsx). */
+/** What we do: the statement, then Train / Consult / Done for you as clicky tabs (components/home/ServicesCall.tsx). */
 export function Services() {
   const sv = home.services;
   const course = listedCourses[0];
   return (
     <ServicesCall
+      statement={sv.statement}
+      keep={sv.statementKeep}
       heading={sv.heading}
       ask={sv.ask}
-      live={sv.live}
       lanes={sv.lanes}
       items={sv.items.map((it) => ({
         label: it.label,
