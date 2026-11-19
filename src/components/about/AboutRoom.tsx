@@ -33,7 +33,7 @@ export function AboutRoom({ items, workshop, dragHint }: { items: Item[]; worksh
                 {!photo && <span aria-hidden className="proof-tape absolute -top-3 left-1/2 h-6 w-20 -translate-x-1/2 rotate-[-4deg] rounded-[3px]" />}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={it.src} alt={it.alt} width={it.width} height={it.height} loading="lazy" draggable={false} className="block h-auto w-full rounded-[3px] border border-ink/15" />
-                {photo && <figcaption className="mt-3 font-display text-[1.05rem] font-semibold tracking-[-0.01em]">{workshop}</figcaption>}
+                {photo && <figcaption className="mt-3 font-display text-[length:calc(1.05rem*var(--type-scale))] font-semibold tracking-[-0.01em]">{workshop}</figcaption>}
               </figure>
             </li>
           );

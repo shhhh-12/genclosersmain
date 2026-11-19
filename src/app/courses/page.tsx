@@ -19,7 +19,7 @@ export default function CoursesPage() {
         <div className="mx-auto max-w-(--container-page)">
           <div className="flex items-end justify-between gap-6 border-b border-ink-line pb-8">
             <div>
-              <h1 className="font-display text-mega font-semibold tracking-[-0.045em]">
+              <h1 className="font-display text-mega font-semibold tracking-[-0.04em]">
                 <WordReveal text={site.ui.allCourses} />
               </h1>
               <p className="mt-4 max-w-[48ch] text-lead text-mute-dark">{site.ui.allCoursesIntro}</p>

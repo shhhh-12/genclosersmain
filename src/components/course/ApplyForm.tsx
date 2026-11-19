@@ -176,7 +176,7 @@ export function ApplyForm({ courseName }: { courseName: string }) {
         const label = (
           <span className="flex items-baseline gap-3">
             <span className="font-mono text-[0.75rem] text-signal">{String(idx + 1).padStart(2, "0")}</span>
-            <span className="font-display text-[1.125rem] font-medium">
+            <span className="font-display text-[length:calc(1.125rem*var(--type-scale))] font-medium">
               <Txt>{field.label}</Txt>
             </span>
           </span>

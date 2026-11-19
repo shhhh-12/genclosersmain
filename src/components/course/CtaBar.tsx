@@ -42,7 +42,7 @@ export function CtaBar({ price, label, seats }: { price: number; label: string; 
       >
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-baseline gap-4">
-            <Price amount={price} className="font-display text-[1.375rem] font-semibold" />
+            <Price amount={price} className="font-display text-[length:calc(1.375rem*var(--type-scale))] font-semibold" />
             <span className="eyebrow hidden text-mute-dark sm:inline">{seats}</span>
           </div>
           <ButtonLink href="#apply" tabIndex={show ? 0 : -1}>

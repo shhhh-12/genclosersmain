@@ -1104,12 +1104,12 @@ export function FriendStory({
             <div className="relative mx-auto h-full max-w-(--container-page)">
               {/* the first screen: what GenClosers is, readable at once (owner 2026-11-19) */}
               <div className="fs-lead absolute bottom-[6svh] left-0 motion-reduce:static motion-reduce:mb-12 md:top-1/2 md:bottom-auto md:-translate-y-1/2">
-                <h2 className="max-w-[14ch] font-display text-h1 leading-[0.98] font-semibold tracking-[-0.035em] text-balance text-ink">
+                <h2 className="max-w-[14ch] font-display text-h1 leading-[1.06] font-semibold tracking-[-0.035em] text-balance text-ink">
                   <Accent line={{ text: lead.heading, accent: lead.accent }} />
                 </h2>
                 <p className="mt-5 max-w-[34ch] text-lead text-ink/75">{lead.body}</p>
                 {lead.link && (
-                  <Link href={lead.link.href} className="group pointer-events-auto mt-7 inline-flex items-center gap-3 font-display text-[1.125rem] font-medium text-ink">
+                  <Link href={lead.link.href} className="group pointer-events-auto mt-7 inline-flex items-center gap-3 font-display text-[length:calc(1.125rem*var(--type-scale))] font-medium text-ink">
                     <span className="border-b border-ink/30 pb-0.5 transition-colors group-hover:border-signal group-hover:text-signal">{lead.link.label}</span>
                     <span className="text-signal transition-transform duration-450 ease-primary group-hover:translate-x-1">
                       <Arrow />
@@ -1119,13 +1119,13 @@ export function FriendStory({
               </div>
               {lines.map((l, i) => (
                 <div key={l.text} className="fs-line absolute bottom-[9svh] left-0 motion-reduce:static motion-reduce:mb-6 md:bottom-[40svh]" style={motion ? { opacity: 0 } : undefined}>
-                  <p className="fs-scene mb-3 inline-block -rotate-2 text-[1.7rem] leading-none text-ink/70" style={{ fontFamily: "var(--font-hand)" }}>
+                  <p className="fs-scene mb-3 inline-block -rotate-2 text-[length:calc(1.7rem*var(--type-scale))] leading-none text-ink/70" style={{ fontFamily: "var(--font-hand)" }}>
                     {eyebrows[i]}
                     <svg viewBox="0 0 120 8" className="mt-1 block h-2 w-full" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden>
                       <path d="M2 5c18-4 34 2 52-1s40-2 64 0" />
                     </svg>
                   </p>
-                  <p className="max-w-[11ch] font-display text-h1 leading-[0.98] font-semibold tracking-[-0.035em] text-balance text-ink motion-reduce:text-h2">
+                  <p className="max-w-[11ch] font-display text-h1 leading-[1.06] font-semibold tracking-[-0.035em] text-balance text-ink motion-reduce:text-h2">
                     {motion ? <ReadLine line={l} /> : <Accent line={l} />}
                   </p>
                 </div>
@@ -1143,7 +1143,7 @@ export function FriendStory({
                 <circle cx="32" cy="32" r="7" fill={RED} />
               </svg>
             </span>
-            <span className="fs-seat-label fs-seat-hop absolute bottom-[6rem] left-0 -translate-x-1/2 rounded-full bg-signal px-5 py-2.5 text-[1.75rem] leading-none whitespace-nowrap text-signal-ink shadow-[0_12px_32px_-10px_rgb(227_16_27/0.75)]" style={{ fontFamily: "var(--font-hand)" }}>
+            <span className="fs-seat-label fs-seat-hop absolute bottom-[6rem] left-0 -translate-x-1/2 rounded-full bg-signal px-5 py-2.5 text-[length:calc(1.75rem*var(--type-scale))] leading-none whitespace-nowrap text-signal-ink shadow-[0_12px_32px_-10px_rgb(227_16_27/0.75)]" style={{ fontFamily: "var(--font-hand)" }}>
               {watched ? seat.again : seat.hold}
             </span>
           </button>
@@ -1170,10 +1170,10 @@ export function FriendStory({
             <div className="flex h-full items-center px-(--gutter)">
               <div className="mx-auto w-full max-w-(--container-page)">
                 <LogoMark className="h-12 w-auto text-signal md:h-16" title="" />
-                <p className="mt-8 max-w-[12ch] font-display text-[clamp(3rem,7.5vw,7rem)] leading-[0.92] font-semibold tracking-[-0.045em] text-ink">
+                <p className="mt-8 max-w-[12ch] font-display text-[length:calc(clamp(3rem,7.5vw,7rem)*var(--type-scale))] leading-[1.1] font-semibold tracking-[-0.04em] text-ink">
                   <Accent line={{ text: card.title, accent: card.accent }} />
                 </p>
-                <p className="mt-6 text-[1.75rem] leading-none text-ink/70 md:text-[2.25rem]" style={{ fontFamily: "var(--font-hand)" }}>
+                <p className="mt-6 text-[length:calc(1.75rem*var(--type-scale))] leading-none text-ink/70 md:text-[length:calc(2.25rem*var(--type-scale))]" style={{ fontFamily: "var(--font-hand)" }}>
                   {card.sub}
                 </p>
               </div>

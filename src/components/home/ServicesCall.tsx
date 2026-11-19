@@ -165,7 +165,7 @@ export function ServicesCall({
                   aria-controls="svc-panel"
                   tabIndex={active === i ? 0 : -1}
                   onClick={() => pick(i)}
-                  className={`relative z-10 flex cursor-pointer items-center justify-center gap-2 rounded-pill px-1 py-4 font-display text-[0.9rem] font-semibold whitespace-nowrap transition-[color,scale] duration-200 ease-primary active:scale-[0.93] sm:px-3 sm:text-[1.2rem] ${active === i ? "text-signal-ink" : "text-mute-dark hover:text-paper"}`}
+                  className={`relative z-10 flex cursor-pointer items-center justify-center gap-2 rounded-pill px-1 py-4 font-display text-[length:calc(0.9rem*var(--type-scale))] font-semibold whitespace-nowrap transition-[color,scale] duration-200 ease-primary active:scale-[0.93] sm:px-3 sm:text-[length:calc(1.2rem*var(--type-scale))] ${active === i ? "text-signal-ink" : "text-mute-dark hover:text-paper"}`}
                 >
                   <Art i={i} className={`hidden size-5 shrink-0 sm:block ${active === i ? "" : "opacity-70"}`} />
                   {x.label}
@@ -183,7 +183,7 @@ export function ServicesCall({
                 { name: lanes.us, roles: items.map((x) => x.us), red: true },
               ].map((side, s) => (
                 <div key={side.name} className={`p-7 sm:p-10 ${s ? "border-t border-ink-line bg-signal/[0.07] lg:border-t-0 lg:border-l" : ""}`}>
-                  <div className={`flex items-center gap-2.5 font-display text-[1.125rem] font-semibold ${side.red ? "text-signal" : "text-paper/70"}`}>
+                  <div className={`flex items-center gap-2.5 font-display text-[length:calc(1.125rem*var(--type-scale))] font-semibold ${side.red ? "text-signal" : "text-paper/70"}`}>
                     {side.red && <LogoMark className="h-[0.9em] w-auto" title="" />}
                     {side.name}
                   </div>
@@ -191,7 +191,7 @@ export function ServicesCall({
                     {side.roles.map((r, i) => (
                       <p
                         key={i}
-                        className={`${slot} font-display text-[clamp(2rem,1.3rem+2.6vw,3.5rem)] leading-[1.02] font-semibold tracking-[-0.035em] ${side.red ? "text-signal" : "text-paper"} ${place(i, active)}`}
+                        className={`${slot} font-display text-[length:calc(clamp(2rem,1.3rem+2.6vw,3.5rem)*var(--type-scale))] leading-[1.1] font-semibold tracking-[-0.035em] ${side.red ? "text-signal" : "text-paper"} ${place(i, active)}`}
                         style={{ transitionDelay: s ? "70ms" : "0ms" }}
                       >
                         {r}.
@@ -206,7 +206,7 @@ export function ServicesCall({
             <div className="grid border-t border-ink-line">
               {items.map((x, i) => {
                 const on = active === i;
-                const cls = "group/link inline-flex items-center gap-2.5 rounded-pill bg-paper px-6 py-3 font-display text-[1.0625rem] font-semibold text-ink transition-colors duration-450 hover:bg-signal hover:text-signal-ink";
+                const cls = "group/link inline-flex items-center gap-2.5 rounded-pill bg-paper px-6 py-3 font-display text-[length:calc(1.0625rem*var(--type-scale))] font-semibold text-ink transition-colors duration-450 hover:bg-signal hover:text-signal-ink";
                 const inner = (
                   <>
                     {x.external && <WhatsApp className="h-4 w-4" />}

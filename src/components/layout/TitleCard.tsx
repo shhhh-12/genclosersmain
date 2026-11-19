@@ -118,7 +118,7 @@ export function TitleCard() {
 
   if (!card) return null;
   const word = (
-    <span className="tc-word block font-display text-mega leading-none font-semibold tracking-[-0.045em] whitespace-nowrap text-signal uppercase">{card.label}</span>
+    <span className="tc-word block font-display text-mega leading-none font-semibold tracking-[-0.04em] whitespace-nowrap text-signal uppercase">{card.label}</span>
   );
   return (
     <div aria-hidden className="fixed inset-0 z-[80] overflow-hidden">

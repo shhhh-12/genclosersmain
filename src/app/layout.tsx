@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
-import { Space_Mono, Patrick_Hand } from "next/font/google";
+import { Space_Mono, Patrick_Hand, Poppins } from "next/font/google";
 import { site } from "@/content/site";
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
 import { TitleCard } from "@/components/layout/TitleCard";
+import { FontSwitch, FONT_BOOT } from "@/components/layout/FontSwitch";
 import "./globals.css";
 
 // Chillax variable (weights 200 to 700), self-hosted from /Fonts, preloaded.
@@ -34,6 +35,16 @@ const hand = Patrick_Hand({
   preload: false,
 });
 
+// TESTING (owner 2026-11-19): Poppins as an alternative to Chillax, switched by FontSwitch.
+// Not preloaded, so visitors who never switch never download it.
+const poppins = Poppins({
+  variable: "--font-poppins",
+  weight: ["200", "300", "400", "500", "600", "700"],
+  subsets: ["latin"],
+  display: "swap",
+  preload: false,
+});
+
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
@@ -56,10 +67,15 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en-IN" suppressHydrationWarning className={`${chillax.variable} ${spaceMono.variable} ${hand.variable}`}>
+    <html lang="en-IN" suppressHydrationWarning className={`${chillax.variable} ${spaceMono.variable} ${hand.variable} ${poppins.variable}`}>
+      <head>
+        {/* sets the chosen test font before the first paint, so the page never flashes the other one */}
+        <script dangerouslySetInnerHTML={{ __html: FONT_BOOT }} />
+      </head>
       <body className="min-h-dvh bg-ink text-paper">
         <SmoothScroll />
         <TitleCard />
+        <FontSwitch />
         {children}
       </body>
     </html>

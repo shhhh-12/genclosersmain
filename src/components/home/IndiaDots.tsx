@@ -120,9 +120,11 @@ export function IndiaDots({ label, className }: { label: string; className?: str
       if (scene && stage && scenePinned()) {
         const sr = scene.getBoundingClientRect();
         const h = stage.offsetHeight;
-        const lead = Math.max(0, h - vh); // scrolled before it sticks (its top padding goes under the header)
+        // from the very first scroll (owner 2026-11-19: no lag), including the few px a stage taller than
+        // the window scrolls before it sticks
+        const lead = Math.max(0, h - vh);
         const hold = scene.offsetHeight - Math.max(h, vh);
-        return clamp01((-sr.top - lead) / Math.max(1, hold * 0.9));
+        return clamp01(-sr.top / Math.max(1, (lead + hold) * 0.9));
       }
       const rect = box.getBoundingClientRect();
       const start = Math.min(vh * 0.85, rect.top + window.scrollY);

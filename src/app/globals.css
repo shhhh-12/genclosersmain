@@ -26,22 +26,24 @@
   --font-body: var(--font-chillax), ui-sans-serif;
   --font-mono: var(--font-space-mono), ui-monospace;
 
-  /* Fluid type scale (min at 375px, max at 1440px) */
+  /* Fluid type scale (min at 375px, max at 1440px). Every size but the mono label is multiplied by
+     --type-scale (owner 2026-11-19: smaller text everywhere, both fonts); hand-sized text-[...] values in
+     the components use it too. Heading line heights opened up so descenders never touch the next line. */
   --text-label: 0.75rem;
   --text-label--letter-spacing: 0.14em;
-  --text-small: 0.9375rem;
-  --text-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+  --text-small: calc(0.9375rem * var(--type-scale));
+  --text-body: calc(clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem) * var(--type-scale));
   --text-body--line-height: 1.6;
-  --text-lead: clamp(1.25rem, 1.1rem + 0.6vw, 1.625rem);
-  --text-lead--line-height: 1.4;
-  --text-h3: clamp(1.5rem, 1.3rem + 0.9vw, 2.125rem);
-  --text-h3--line-height: 1.15;
-  --text-h2: clamp(2.25rem, 1.6rem + 2.8vw, 4.25rem);
-  --text-h2--line-height: 1.02;
-  --text-h1: clamp(2.75rem, 1.7rem + 4.6vw, 6.5rem);
-  --text-h1--line-height: 0.96;
-  --text-mega: clamp(3.5rem, 1.5rem + 8.5vw, 10.5rem);
-  --text-mega--line-height: 0.9;
+  --text-lead: calc(clamp(1.25rem, 1.1rem + 0.6vw, 1.625rem) * var(--type-scale));
+  --text-lead--line-height: 1.45;
+  --text-h3: calc(clamp(1.5rem, 1.3rem + 0.9vw, 2.125rem) * var(--type-scale));
+  --text-h3--line-height: 1.2;
+  --text-h2: calc(clamp(2.25rem, 1.6rem + 2.8vw, 4.25rem) * var(--type-scale));
+  --text-h2--line-height: 1.1;
+  --text-h1: calc(clamp(2.75rem, 1.7rem + 4.6vw, 6.5rem) * var(--type-scale));
+  --text-h1--line-height: 1.06;
+  --text-mega: calc(clamp(3.5rem, 1.5rem + 8.5vw, 10.5rem) * var(--type-scale));
+  --text-mega--line-height: 1;
 
   /* Radii: mostly sharp, one soft value for buttons and media */
   --radius-sharp: 2px;
@@ -922,6 +924,41 @@ html {
 @media (prefers-reduced-motion: reduce) {
   .proof-badge, .proof-burst { animation: none; }
   .proof-burst { display: none; }
+}
+
+:root {
+  --type-scale: 0.9; /* one knob for every text size on the site */
+}
+
+/* headings: a touch of air between words (the tight tracking also tightens the spaces) */
+:is(h1, h2, h3, h4, blockquote).font-display {
+  word-spacing: 0.04em;
+}
+
+/* TESTING (owner 2026-11-19): every Chillax text in Poppins instead (components/layout/FontSwitch.tsx).
+   Display and body go through these two variables, so this one rule switches the whole site. */
+html[data-font="poppins"] {
+  --font-display: var(--font-poppins), ui-sans-serif;
+  --font-body: var(--font-poppins), ui-sans-serif;
+  /* Poppins has much taller ascenders and descenders than Chillax: more room between lines */
+  --text-h3--line-height: 1.26;
+  --text-h2--line-height: 1.18;
+  --text-h1--line-height: 1.15;
+  --text-mega--line-height: 1.1;
+}
+/* and it is a wider face: the tight tracking tuned for Chillax makes its letters touch */
+html[data-font="poppins"] [class*="tracking-[-0.03"],
+html[data-font="poppins"] [class*="tracking-[-0.04"],
+html[data-font="poppins"] [class*="tracking-[-0.05"] {
+  letter-spacing: -0.018em;
+}
+html[data-font="poppins"] [class*="tracking-[-0.02"] {
+  letter-spacing: -0.01em;
+}
+html[data-font="poppins"] :is(h1, h2, h3, h4, p, blockquote, dd)[class*="leading-[0.9"],
+html[data-font="poppins"] :is(h1, h2, h3, h4, p, blockquote, dd)[class*="leading-[1.0"],
+html[data-font="poppins"] :is(h1, h2, h3, h4, p, blockquote, dd)[class*="leading-[1.1"] {
+  line-height: 1.16;
 }
 
 /* About (app/about/page.tsx) */

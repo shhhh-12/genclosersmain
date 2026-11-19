@@ -17,7 +17,7 @@ export function BrandMarquee({ label, brands, compact = false }: { label?: strin
           <li
             key={i}
             aria-hidden={i >= brands.length || undefined}
-            className={`brand-name font-display ${compact ? "text-[clamp(1.25rem,1.9vw,1.6rem)]" : "text-h3"} font-semibold tracking-[-0.03em] whitespace-nowrap text-paper/55 ${i >= brands.length ? "motion-reduce:hidden" : ""}`}
+            className={`brand-name font-display ${compact ? "text-[length:calc(clamp(1.25rem,1.9vw,1.6rem)*var(--type-scale))]" : "text-h3"} font-semibold tracking-[-0.03em] whitespace-nowrap text-paper/55 ${i >= brands.length ? "motion-reduce:hidden" : ""}`}
           >
             {b}
           </li>

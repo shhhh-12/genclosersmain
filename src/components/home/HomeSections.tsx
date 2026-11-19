@@ -48,8 +48,8 @@ export function HomeHero() {
 export function Proof() {
   const pr = home.proof;
   return (
-    <section className="section-pad relative flex min-h-svh flex-col justify-center gap-10 pt-24 pb-8 sm:pt-28 lg:gap-8">
-      <div className="mx-auto grid w-full max-w-(--container-page) items-center gap-12 lg:grid-cols-12 lg:gap-10">
+    <section className="section-pad relative flex min-h-svh flex-col justify-center gap-10 pt-24 pb-8 lg:gap-7 lg:pt-[6.5rem] lg:pb-6">
+      <div className="mx-auto grid w-full max-w-(--container-page) items-center gap-12 lg:grid-cols-12 lg:items-start lg:gap-10">
         <div className="min-w-0 lg:col-span-7">
           <h1 className="font-display text-h1 font-semibold tracking-[-0.035em] text-balance">
             <ScrollRead text={pr.heading} keep={pr.keep} scene={[0, 0.4]} soft />
@@ -60,7 +60,7 @@ export function Proof() {
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               href={`/courses/${listedCourses[0].slug}`}
-              className="group inline-flex items-center gap-3 rounded-pill bg-signal px-7 py-3.5 font-display text-[1.125rem] font-semibold text-signal-ink shadow-[0_14px_40px_-14px_rgb(227_16_27/0.7)] transition-[background-color,transform] duration-450 ease-primary hover:-translate-y-0.5 hover:bg-signal-deep"
+              className="group inline-flex items-center gap-3 rounded-pill bg-signal px-7 py-3.5 font-display text-[length:calc(1.125rem*var(--type-scale))] font-semibold text-signal-ink shadow-[0_14px_40px_-14px_rgb(227_16_27/0.7)] transition-[background-color,transform] duration-450 ease-primary hover:-translate-y-0.5 hover:bg-signal-deep"
             >
               {home.seeCourse}
               <span className="transition-transform duration-450 ease-primary group-hover:translate-x-1">
@@ -72,13 +72,14 @@ export function Proof() {
               href={site.whatsapp.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2.5 rounded-pill border border-paper/25 px-7 py-3.5 font-display text-[1.125rem] font-semibold text-paper transition-colors duration-450 hover:border-signal hover:text-signal"
+              className="inline-flex items-center gap-2.5 rounded-pill border border-paper/25 px-7 py-3.5 font-display text-[length:calc(1.125rem*var(--type-scale))] font-semibold text-paper transition-colors duration-450 hover:border-signal hover:text-signal"
             >
               <WhatsApp /> {home.closing.work}
             </a>
           </div>
         </div>
-        <IndiaDots label={pr.mapLabel} className="mx-auto w-full max-w-[26rem] lg:col-span-5" />
+        {/* short laptop windows: the map shrinks so the whole first screen fits (no scroll before it holds) */}
+        <IndiaDots label={pr.mapLabel} className="mx-auto w-full max-w-[26rem] lg:col-span-5 lg:max-w-[min(26rem,calc((100svh-310px)/1.13))]" />
       </div>
       {/* the numbers, as a band at the foot of the same screen */}
       <NumbersBand />
@@ -107,7 +108,7 @@ export function NumbersBand() {
           }`}
         >
           <dt className="mt-2 max-w-[24ch] text-small text-mute-dark">{s.label}</dt>
-          <dd className="font-display text-[clamp(2.5rem,4.2vw,4rem)] leading-[0.9] font-bold tracking-[-0.045em] whitespace-nowrap">
+          <dd className="font-display text-[length:calc(clamp(2.5rem,4.2vw,4rem)*var(--type-scale))] leading-[1] font-bold tracking-[-0.04em] whitespace-nowrap">
             {s.rupee && (
               <>
                 <span className="sr-only">₹</span>
@@ -275,7 +276,7 @@ export function People() {
           <h2 className="max-w-[16ch] font-display text-h2 font-semibold tracking-[-0.03em] text-balance">
             <ScrollRead text={about.foundersHeading} still />
           </h2>
-          <Link href="/about" className="group inline-flex items-center gap-3 font-display text-[1.125rem] font-medium text-paper">
+          <Link href="/about" className="group inline-flex items-center gap-3 font-display text-[length:calc(1.125rem*var(--type-scale))] font-medium text-paper">
             <span className="border-b border-paper/30 pb-0.5 transition-colors group-hover:border-signal group-hover:text-signal">{home.people.link}</span>
             <span className="text-signal transition-transform duration-450 ease-primary group-hover:translate-x-1">
               <Arrow />
@@ -311,13 +312,13 @@ export function Closing({ dark = false }: { /** on ink (About page, to keep blac
           <ScrollRead text={c.heading} />
         </h2>
         <div className="flex flex-wrap gap-3">
-          <Link href={`/courses/${listedCourses[0].slug}`} className="group inline-flex items-center gap-2.5 rounded-pill bg-signal px-7 py-3.5 font-display text-[1.125rem] font-semibold text-signal-ink transition-colors duration-450 hover:bg-signal-deep">
+          <Link href={`/courses/${listedCourses[0].slug}`} className="group inline-flex items-center gap-2.5 rounded-pill bg-signal px-7 py-3.5 font-display text-[length:calc(1.125rem*var(--type-scale))] font-semibold text-signal-ink transition-colors duration-450 hover:bg-signal-deep">
             {c.course}
             <span className="transition-transform duration-450 ease-primary group-hover:translate-x-1">
               <Arrow />
             </span>
           </Link>
-          <a href={site.whatsapp.link} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center gap-2.5 rounded-pill border px-7 py-3.5 font-display text-[1.125rem] font-semibold transition-colors duration-450 hover:border-signal hover:text-signal ${dark ? "border-paper/25 text-paper" : "border-ink/25 text-ink"}`}>
+          <a href={site.whatsapp.link} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center gap-2.5 rounded-pill border px-7 py-3.5 font-display text-[length:calc(1.125rem*var(--type-scale))] font-semibold transition-colors duration-450 hover:border-signal hover:text-signal ${dark ? "border-paper/25 text-paper" : "border-ink/25 text-ink"}`}>
             <WhatsApp /> {c.work}
           </a>
         </div>
