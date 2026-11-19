@@ -228,7 +228,7 @@ export function JourneySheet({ heading, steps, courseName }: { heading: string; 
                       <JourneyIcon index={i} className="absolute inset-0 h-full w-full text-ink/15" />
                       <JourneyIcon index={i} draw className="absolute inset-0 h-full w-full text-ink" />
                     </span>
-                    <span className="relative mt-auto pt-2 font-display text-[0.6rem] leading-tight font-semibold break-words hyphens-auto sm:text-small">
+                    <span className="relative mt-auto pt-2 font-display text-[0.75rem] leading-tight font-semibold break-words hyphens-auto sm:text-small">
                       {s.title}
                     </span>
                   </div>
@@ -241,7 +241,7 @@ export function JourneySheet({ heading, steps, courseName }: { heading: string; 
             <div className="relative mt-6 min-h-[3.2rem] sm:mt-8">
               {steps.map((s, i) => (
                 <p key={s.title} className="js-caption absolute inset-x-0 top-0 max-w-[40rem] pr-24 text-body sm:pr-36 text-ink/75 sm:text-lead motion-reduce:hidden" style={{ opacity: i === total - 1 ? 1 : 0 }}>
-                  <span className="mr-3 font-mono text-label text-signal">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="mr-3 font-mono text-label text-signal-deep">{String(i + 1).padStart(2, "0")}</span>
                   {s.body}
                 </p>
               ))}

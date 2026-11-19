@@ -19,6 +19,7 @@ import { applicationForm } from "@/content/form";
 import type { Course } from "@/content/types";
 
 const n2 = (i: number) => String(i).padStart(2, "0");
+const hasTodo = (s: string) => s.includes("[[TODO");
 
 /** Red line that sweeps in along the top edge of a row on hover (parent needs `group relative`). */
 function HoverLine({ tone = "signal" }: { tone?: "signal" }) {
@@ -40,8 +41,8 @@ export function CourseHero({ course }: { course: Course }) {
         <nav aria-label={site.ui.breadcrumbLabel} className="mb-8 text-small text-mute-dark">
           <ol className="flex flex-wrap items-center gap-2">
             <li>
-              <Link href="/courses" className="border-b border-paper/20 pb-0.5 transition-colors hover:border-signal hover:text-paper">
-                {site.ui.allCourses}
+              <Link href="/courses" className="inline-flex min-h-11 items-center transition-colors hover:text-paper"><span className="border-b border-paper/20 pb-0.5 transition-colors hover:border-signal">
+                {site.ui.allCourses}</span>
               </Link>
             </li>
             <li aria-hidden className="text-paper/30">/</li>
@@ -121,7 +122,7 @@ export function AboutLoop({ course }: { course: Course }) {
               {home.beliefs.map((b, i) => (
                 <Reveal as="li" key={b.title} delay={i * 0.07} className="group relative flex gap-4 border-t border-ink-line py-4">
                   <HoverLine />
-                  <span className="font-mono text-small text-signal">{n2(i + 1)}</span>
+                  <span className="font-mono text-small text-signal-bright">{n2(i + 1)}</span>
                   <p>
                     <span className="font-display font-semibold transition-colors group-hover:text-signal">{b.title}</span>{" "}
                     <span className="text-mute-dark">{b.body}</span>
@@ -154,7 +155,7 @@ export function WhatYouGet({ course }: { course: Course }) {
                 className="group relative grid grid-cols-[3rem_1fr] gap-x-4 border-b border-paper-line py-5 transition-colors duration-450 hover:bg-paper-2 sm:grid-cols-[4rem_1fr_1.3fr] sm:gap-x-8"
               >
                 <span aria-hidden className="absolute top-0 bottom-0 left-0 w-[3px] origin-top scale-y-0 bg-signal transition-transform duration-450 ease-primary group-hover:scale-y-100" />
-                <span className="pl-3 font-mono text-small text-signal">{n2(i + 1)}</span>
+                <span className="pl-3 font-mono text-small text-signal-deep">{n2(i + 1)}</span>
                 <h3 className="font-display text-h3 font-semibold tracking-[-0.02em] transition-colors group-hover:text-signal-deep">{item.title}</h3>
                 <p className="col-start-2 mt-2 text-mute-light sm:col-start-3 sm:mt-0">{item.body}</p>
               </Reveal>
@@ -222,7 +223,7 @@ export function Outcomes({ course }: { course: Course }) {
           {o.items.map((item, i) => (
             <Reveal as="li" key={item} delay={(i % 3) * 0.06} className="group relative flex gap-4 border-t border-ink-line py-5">
               <HoverLine />
-              <span className="font-mono text-small text-signal">{n2(i + 1)}</span>
+              <span className="font-mono text-small text-signal-bright">{n2(i + 1)}</span>
               <span className="font-display text-[length:max(0.875rem,calc(1.1875rem*var(--type-scale)))] leading-snug font-medium transition-colors group-hover:text-paper">{item}</span>
             </Reveal>
           ))}
@@ -235,7 +236,8 @@ export function Outcomes({ course }: { course: Course }) {
 
 export function Testimonials({ course }: { course: Course }) {
   const t = course.testimonials;
-  if (!t.items.length) return null;
+  // owner 2026-11-19 (audit): no [[TODO]] placeholders on the live site; local dev still shows them
+  if (!t.items.length || (process.env.NODE_ENV === "production" && hasTodo(t.heading))) return null;
   return (
     <section className="section-pad border-t border-ink-line">
       <div className="mx-auto max-w-(--container-page)">
@@ -250,6 +252,8 @@ export function Testimonials({ course }: { course: Course }) {
 
 export function Faqs({ course }: { course: Course }) {
   const q = course.faqs;
+  // an answer still waiting for the owner is left out on the live site (dev shows it)
+  const items = process.env.NODE_ENV === "production" ? q.items.filter((it) => !hasTodo(it.a)) : q.items;
   return (
     <section className="on-paper section-pad">
       <div className="mx-auto grid max-w-(--container-page) gap-10 lg:grid-cols-12">
@@ -257,7 +261,7 @@ export function Faqs({ course }: { course: Course }) {
           <ScrollRead text={q.heading} />
         </h2>
         <div className="border-t border-ink lg:col-span-8">
-          {q.items.map((item) => (
+          {items.map((item) => (
             <AccordionItem
               key={item.q}
               head={<span className="font-display text-[length:max(0.875rem,calc(1.25rem*var(--type-scale)))] font-semibold tracking-[-0.01em] transition-colors group-hover:text-signal-deep">{item.q}</span>}

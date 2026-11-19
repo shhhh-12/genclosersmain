@@ -79,7 +79,7 @@ export function Proof() {
           </div>
         </div>
         {/* short laptop windows: the map shrinks so the whole first screen fits (no scroll before it holds) */}
-        <IndiaDots label={pr.mapLabel} className="mx-auto w-full max-w-[26rem] lg:col-span-5 lg:max-w-[min(26rem,calc((100svh-310px)/1.13))]" />
+        <IndiaDots label={pr.mapLabel} className="mx-auto w-full max-w-[23.5rem] lg:col-span-5 lg:max-w-[min(23.5rem,calc((100svh-310px)/1.13))]" />
       </div>
       {/* the numbers, as a band at the foot of the same screen */}
       <NumbersBand />
@@ -155,7 +155,7 @@ export function Audience() {
     <section className="on-paper section-pad">
       {/* the line above it all (owner 2026-11-19) */}
       <figure className="mx-auto mb-10 max-w-(--container-page) border-b border-paper-line pb-10 lg:mb-14 lg:pb-14">
-        <blockquote className="max-w-[20ch] font-display text-h1 font-semibold tracking-[-0.035em] text-balance">
+        <blockquote className="ml-auto max-w-[20ch] text-right font-display text-h1 font-semibold tracking-[-0.035em] text-balance">
           <span aria-hidden>&ldquo;</span>
           <ScrollRead text={a.quote} />
           <span aria-hidden>&rdquo;</span>
@@ -202,7 +202,7 @@ export function CoursesBlock({ courses, copy = false }: { courses: Course[]; /**
           <h2 className="font-display text-h2 font-semibold tracking-[-0.03em]">
             <ScrollRead text={home.coursesHeading} still />
           </h2>
-          <Link href="/courses" className="eyebrow text-mute-dark transition-colors hover:text-signal">
+          <Link href="/courses" className="eyebrow inline-flex min-h-11 items-center text-mute-dark transition-colors hover:text-signal">
             {courses.length} {courses.length === 1 ? "course" : "courses"}
           </Link>
         </div>
@@ -220,7 +220,8 @@ export function CoursesBlock({ courses, copy = false }: { courses: Course[]; /**
  * A course as a video thumbnail (owner 2026-11-19: minimal, like a YouTube card): the picture with a
  * length badge, then the name and one quiet line. Everything else lives on the course page.
  */
-export function CourseFeature({ course, showPrice = false }: { course: Course; showPrice?: boolean }) {
+export function CourseFeature({ course, showPrice = false, level = 3 }: { course: Course; showPrice?: boolean; /** h2 where no section heading sits above it (All courses) */ level?: 2 | 3 }) {
+  const H = level === 2 ? "h2" : "h3";
   const fact = (label: string) => course.facts.find((f) => f.label === label)?.value;
   const length = fact("Length")?.split(",")[0];
   const meta = [site.name, fact("Language"), fact("Next batch") && `Next batch ${fact("Next batch")}`].filter(Boolean).join(" · ");
@@ -253,7 +254,7 @@ export function CourseFeature({ course, showPrice = false }: { course: Course; s
             <LogoMark className="h-4 w-auto text-signal" title="" />
           </span>
           <div className="min-w-0">
-            <h3 className="font-display text-h3 leading-tight font-semibold tracking-[-0.02em] transition-colors group-hover:text-signal">{course.name}</h3>
+            <H className="font-display text-h3 leading-tight font-semibold tracking-[-0.02em] transition-colors group-hover:text-signal">{course.name}</H>
             <p className="mt-1 text-small text-mute-dark">{meta}</p>
             {showPrice && (
               <p className="mt-0.5 text-small text-mute-dark">
@@ -276,7 +277,7 @@ export function People() {
           <h2 className="max-w-[16ch] font-display text-h2 font-semibold tracking-[-0.03em] text-balance">
             <ScrollRead text={about.foundersHeading} still />
           </h2>
-          <Link href="/about" className="group inline-flex items-center gap-3 font-display text-[length:max(0.875rem,calc(1.125rem*var(--type-scale)))] font-medium text-paper">
+          <Link href="/about" className="group inline-flex min-h-11 items-center gap-3 font-display text-[length:max(0.875rem,calc(1.125rem*var(--type-scale)))] font-medium text-paper">
             <span className="border-b border-paper/30 pb-0.5 transition-colors group-hover:border-signal group-hover:text-signal">{home.people.link}</span>
             <span className="text-signal transition-transform duration-450 ease-primary group-hover:translate-x-1">
               <Arrow />
@@ -290,7 +291,7 @@ export function People() {
               <img src={f.photo.src} alt={f.name} width={f.photo.width} height={f.photo.height} loading="lazy" className="size-24 shrink-0 rounded-2xl border border-ink-line object-cover object-top grayscale sm:size-28" />
               <div className="min-w-0">
                 <h3 className="font-display text-h3 font-semibold tracking-[-0.02em]">{f.name}</h3>
-                {f.knownAs && <p className="mt-1 font-display text-small font-semibold text-signal">{f.knownAs}</p>}
+                {f.knownAs && <p className="mt-1 font-display text-small font-semibold text-signal-bright">{f.knownAs}</p>}
                 <p className="mt-2 text-small text-mute-dark">{f.role}</p>
                 <p className="mt-3 text-paper/85">{f.highlight}</p>
               </div>

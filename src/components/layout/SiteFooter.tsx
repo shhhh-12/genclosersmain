@@ -16,21 +16,21 @@ export function SiteFooter({ minimal = false }: { minimal?: boolean }) {
         {!minimal && (
           <div>
             <p className="eyebrow text-mute-dark">{site.footer.explore}</p>
-            <ul className="mt-4 space-y-2">
+            <ul className="mt-3">
               {listedCourses.map((c) => (
                 <li key={c.slug}>
-                  <Link href={`/courses/${c.slug}`} className="text-paper transition-colors hover:text-signal">
+                  <Link href={`/courses/${c.slug}`} className="inline-flex min-h-11 items-center text-paper transition-colors hover:text-signal">
                     {c.name}
                   </Link>
                 </li>
               ))}
               <li>
-                <Link href="/courses" className="text-paper transition-colors hover:text-signal">
+                <Link href="/courses" className="inline-flex min-h-11 items-center text-paper transition-colors hover:text-signal">
                   {site.footer.allCourses}
                 </Link>
               </li>
               <li>
-                <Link href={site.footer.about.href} className="text-paper transition-colors hover:text-signal">
+                <Link href={site.footer.about.href} className="inline-flex min-h-11 items-center text-paper transition-colors hover:text-signal">
                   {site.footer.about.label}
                 </Link>
               </li>
@@ -44,14 +44,14 @@ export function SiteFooter({ minimal = false }: { minimal?: boolean }) {
             href={site.whatsapp.link}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-4 inline-flex items-center gap-2 text-paper transition-colors hover:text-signal"
+            className="mt-3 flex min-h-11 items-center gap-2 text-paper transition-colors hover:text-signal"
           >
             <WhatsApp /> {site.whatsapp.display}
           </a>
-          <a href={`mailto:${site.email}`} className="mt-3 flex items-center gap-2 text-paper transition-colors hover:text-signal">
+          <a href={`mailto:${site.email}`} className="flex min-h-11 items-center gap-2 text-paper transition-colors hover:text-signal">
             <Mail /> {site.email}
           </a>
-          <a href={site.instagram.link} target="_blank" rel="noopener noreferrer" className="mt-3 flex items-center gap-2 text-paper transition-colors hover:text-signal">
+          <a href={site.instagram.link} target="_blank" rel="noopener noreferrer" className="flex min-h-11 items-center gap-2 text-paper transition-colors hover:text-signal">
             <Instagram /> {site.instagram.handle}
           </a>
         </div>
@@ -64,7 +64,7 @@ export function SiteFooter({ minimal = false }: { minimal?: boolean }) {
         <ul className="flex gap-6">
           {site.footer.legal.map((l) => (
             <li key={l.href}>
-              <Link href={l.href} className="transition-colors hover:text-paper">
+              <Link href={l.href} className="inline-flex min-h-11 items-center transition-colors hover:text-paper">
                 {l.label}
               </Link>
             </li>

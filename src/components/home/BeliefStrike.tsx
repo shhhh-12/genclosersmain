@@ -31,7 +31,7 @@ export function BeliefStrike({ items }: { items: readonly Card[] }) {
         const old = cut < 0 ? "" : b.title.slice(cut + 2);
         return (
           <li key={b.title} data-belief className="group relative grid gap-3 border-b border-paper-line py-8 transition-colors duration-450 hover:bg-paper-2 md:grid-cols-12 md:items-baseline md:py-10">
-            <span className="font-mono text-small text-signal md:col-span-1">0{i + 1}</span>
+            <span className="font-mono text-small text-signal-deep md:col-span-1">0{i + 1}</span>
             <h2 className="font-display text-h2 tracking-[-0.03em] md:col-span-6">
               <span className="font-bold">{keep}</span>{" "}
               {old && (

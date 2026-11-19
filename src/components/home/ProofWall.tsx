@@ -24,14 +24,14 @@ type Copy = { workshop: string; like: string; liked: string; close: string; prev
 
 // desktop scatter: left %, top px, tilt, width px (same order as the items)
 const SPOTS = [
-  { l: 0, t: 30, r: -4, w: 380 },
-  { l: 30, t: 0, r: 3, w: 300 },
-  { l: 55, t: 46, r: -3, w: 330 },
-  { l: 81, t: 6, r: 5, w: 240 },
-  { l: 2, t: 470, r: 4, w: 260 },
-  { l: 25, t: 410, r: -4, w: 290 },
-  { l: 51, t: 440, r: 3, w: 280 },
-  { l: 77, t: 420, r: -5, w: 260 },
+  { l: 0, t: 27, r: -4, w: 342 },
+  { l: 30, t: 0, r: 3, w: 270 },
+  { l: 55, t: 41, r: -3, w: 297 },
+  { l: 81, t: 5, r: 5, w: 216 },
+  { l: 2, t: 423, r: 4, w: 234 },
+  { l: 25, t: 369, r: -4, w: 261 },
+  { l: 51, t: 396, r: 3, w: 252 },
+  { l: 77, t: 378, r: -5, w: 234 },
 ];
 const DOUBLE_MS = 280; // a second click within this is a double-click (a like), not a preview
 
@@ -146,7 +146,7 @@ export function ProofWall({ heading, sub, dragHint, youtube, instagram, copy, it
         </h2>
         <p className="mt-4 max-w-[42ch] text-lead text-mute-light">{sub}</p>
 
-        <ul ref={table} className="pol-table -mx-(--gutter) mt-14 flex snap-x items-start gap-5 overflow-x-auto px-(--gutter) pt-5 pb-8 lg:relative lg:mx-0 lg:mt-16 lg:block lg:h-[940px] lg:overflow-visible lg:px-0 lg:pt-0 lg:pb-0">
+        <ul ref={table} className="pol-table -mx-(--gutter) mt-14 flex snap-x items-start gap-5 overflow-x-auto px-(--gutter) pt-5 pb-8 lg:relative lg:mx-0 lg:mt-16 lg:block lg:h-[850px] lg:overflow-visible lg:px-0 lg:pt-0 lg:pb-0">
           {items.map((it, i) => {
             const sp = SPOTS[i % SPOTS.length];
             const photo = it.kind === "photo";
@@ -165,7 +165,7 @@ export function ProofWall({ heading, sub, dragHint, youtube, instagram, copy, it
                     setOpen(i);
                   }
                 }}
-                className={`pol proof-pol shrink-0 cursor-zoom-in snap-center select-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-signal lg:absolute ${photo ? "w-[280px]" : "w-[240px]"}`}
+                className={`pol proof-pol shrink-0 cursor-zoom-in snap-center select-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-signal lg:absolute ${photo ? "w-[252px]" : "w-[216px]"}`}
                 style={{ left: `${sp.l}%`, top: sp.t, ["--r" as string]: `${sp.r}deg`, ["--w" as string]: `${sp.w}px` }}
               >
                 <figure className="relative rounded-[6px] border-[2.5px] border-ink bg-white p-3 pb-3.5 text-ink shadow-[7px_8px_0_0_rgba(0,0,0,0.55)]">

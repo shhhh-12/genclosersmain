@@ -20,6 +20,7 @@
   --color-signal: #e3101b; /* brand red, derived from the logo */
   --color-signal-deep: #a10b13;
   --color-signal-ink: #fff5f2; /* text on red */
+  --color-signal-bright: #ff4b53; /* small red text on ink only (6:1); the brand red stays #e3101b */
 
   /* Type families */
   --font-display: var(--font-chillax), ui-sans-serif;
@@ -38,11 +39,11 @@
   --text-lead--line-height: 1.6;
   --text-h3: max(1.125rem, calc(clamp(1.5rem, 1.3rem + 0.9vw, 2.125rem) * var(--type-scale)));
   --text-h3--line-height: 1.2;
-  --text-h2: calc(clamp(2.25rem, 1.6rem + 2.8vw, 4.25rem) * var(--type-scale));
+  --text-h2: max(1.625rem, calc(clamp(2.25rem, 1.6rem + 2.8vw, 4.25rem) * var(--type-scale)));
   --text-h2--line-height: 1.1;
-  --text-h1: calc(clamp(2.75rem, 1.7rem + 4.6vw, 6.5rem) * var(--type-scale));
+  --text-h1: max(2.125rem, calc(clamp(2.75rem, 1.7rem + 4.6vw, 6.5rem) * var(--type-scale))); /* phones: at least 34px */
   --text-h1--line-height: 1.06;
-  --text-mega: calc(clamp(3.5rem, 1.5rem + 8.5vw, 10.5rem) * var(--type-scale));
+  --text-mega: max(2.5rem, calc(clamp(3.5rem, 1.5rem + 8.5vw, 10.5rem) * var(--type-scale)));
   --text-mega--line-height: 1;
 
   /* Radii: mostly sharp, one soft value for buttons and media */
@@ -498,7 +499,7 @@ html[data-intro="play"] body {
 /* the whole "Who it's for" block holds for about one scroll on desktop screens tall enough to show it */
 /* very tall windows (or zoomed out) show it all at once, so no hold there: holding only showed empty paper */
 @media (min-width: 1024px) and (min-height: 760px) and (max-height: 1100px) {
-  .aud-stage { position: sticky; top: max(6rem, calc((100svh - 690px) / 2)); } /* centred in the window */
+  .aud-stage { position: sticky; top: max(6rem, calc((100svh - 630px) / 2)); } /* centred in the window */
   .aud-stage .aud-inner { position: static; }
   .aud-stage > :first-child { align-self: center; } /* the words sit level with the middle of the card pile */
   .aud-spacer { height: min(40svh, 360px); }
@@ -926,6 +927,21 @@ html {
   .proof-burst { display: none; }
 }
 
+/* Space between sections (owner 2026-11-19): every white section on the pages is a paper
+   sheet (sharp corners) with a gap of ink around it, so each section reads as its own block and two white sections in
+   a row never run together. */
+:root {
+  --sheet-gap: clamp(0.5rem, 0.2rem + 1.2vw, 1.25rem);
+  --sheet-radius: 0; /* owner 2026-11-19: sharp corners, as before */
+}
+main section.on-paper {
+  margin: var(--sheet-gap);
+  border-radius: var(--sheet-radius);
+}
+main section.on-paper + section.on-paper {
+  margin-top: 0; /* one gap between two sheets, not two */
+}
+
 /* reading text at the smaller scale: a hair of tracking so it breathes */
 body {
   letter-spacing: 0.006em;
@@ -938,32 +954,6 @@ body {
 /* headings: a touch of air between words (the tight tracking also tightens the spaces) */
 :is(h1, h2, h3, h4, blockquote).font-display {
   word-spacing: 0.04em;
-}
-
-/* TESTING (owner 2026-11-19): every Chillax text in Poppins instead (components/layout/FontSwitch.tsx).
-   Display and body go through these two variables, so this one rule switches the whole site. */
-html[data-font="poppins"] {
-  --font-display: var(--font-poppins), ui-sans-serif;
-  --font-body: var(--font-poppins), ui-sans-serif;
-  /* Poppins has much taller ascenders and descenders than Chillax: more room between lines */
-  --text-h3--line-height: 1.26;
-  --text-h2--line-height: 1.18;
-  --text-h1--line-height: 1.15;
-  --text-mega--line-height: 1.1;
-}
-/* and it is a wider face: the tight tracking tuned for Chillax makes its letters touch */
-html[data-font="poppins"] [class*="tracking-[-0.03"],
-html[data-font="poppins"] [class*="tracking-[-0.04"],
-html[data-font="poppins"] [class*="tracking-[-0.05"] {
-  letter-spacing: -0.018em;
-}
-html[data-font="poppins"] [class*="tracking-[-0.02"] {
-  letter-spacing: -0.01em;
-}
-html[data-font="poppins"] :is(h1, h2, h3, h4, p, blockquote, dd)[class*="leading-[0.9"],
-html[data-font="poppins"] :is(h1, h2, h3, h4, p, blockquote, dd)[class*="leading-[1.0"],
-html[data-font="poppins"] :is(h1, h2, h3, h4, p, blockquote, dd)[class*="leading-[1.1"] {
-  line-height: 1.16;
 }
 
 /* About (app/about/page.tsx) */

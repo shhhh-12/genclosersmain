@@ -7,7 +7,7 @@
  * Screen readers get the plain text. Reduced motion: plain text, no effect.
  */
 
-import { useEffect, useRef } from "react";
+import { Fragment, useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useMotionAllowed } from "@/lib/useMotionAllowed";
@@ -28,6 +28,7 @@ export function ScrollRead({
   still = false,
   scene,
   soft = false,
+  breakAt,
 }: {
   text: string;
   settle?: "ink" | "signal";
@@ -42,6 +43,8 @@ export function ScrollRead({
   scene?: readonly [from: number, to: number];
   /** Unread letters stay more visible (for text that is on screen before you scroll). */
   soft?: boolean;
+  /** The heading always breaks onto a new line right after this phrase (e.g. its first sentence). */
+  breakAt?: string;
 }) {
   const ref = useRef<HTMLSpanElement>(null);
   const motion = useMotionAllowed();
@@ -105,6 +108,9 @@ export function ScrollRead({
   const sAt = strong ? text.indexOf(strong) : -1;
   const words = text.split(" ");
   const starts = words.map((_, w) => words.slice(0, w).reduce((n, x) => n + x.length + 1, 0));
+  // the word that ends `breakAt` is followed by a line break instead of a space
+  const bAt = breakAt ? text.indexOf(breakAt) + breakAt.length : -1;
+  const breaksAfter = (w: number) => bAt > 0 && starts[w] + words[w].length === bAt;
   const weight = (w: number) => (sAt < 0 ? undefined : starts[w] < sAt + strong!.length && starts[w] + words[w].length > sAt ? "font-bold" : "font-light");
 
   if (!motion || still)
@@ -113,7 +119,7 @@ export function ScrollRead({
         {words.map((word, w) => (
           <span key={w} className={weight(w)}>
             {word}
-            {w < words.length - 1 ? " " : ""}
+            {breaksAfter(w) ? <br /> : w < words.length - 1 ? " " : ""}
           </span>
         ))}
       </span>
@@ -125,14 +131,17 @@ export function ScrollRead({
   return (
     <span ref={ref} className={`scroll-read ${soft ? "read-soft" : ""} ${settle === "signal" ? "settle-signal" : ""} ${className ?? ""}`} aria-label={text} role="text">
       {words.map((word, w, all) => (
-        <span key={w} aria-hidden className={`inline-block whitespace-nowrap ${weight(w) ?? ""}`}>
-          {word.split("").map((ch, ci) => (
-            <span key={idx} data-c={idx++} data-s="0" data-keep={kept(starts[w] + ci) ? "" : undefined}>
-              {ch}
-            </span>
-          ))}
-          {w < all.length - 1 ? " " : ""}
-        </span>
+        <Fragment key={w}>
+          <span aria-hidden className={`inline-block whitespace-nowrap ${weight(w) ?? ""}`}>
+            {word.split("").map((ch, ci) => (
+              <span key={idx} data-c={idx++} data-s="0" data-keep={kept(starts[w] + ci) ? "" : undefined}>
+                {ch}
+              </span>
+            ))}
+            {!breaksAfter(w) && w < all.length - 1 ? " " : ""}
+          </span>
+          {breaksAfter(w) && <br />}
+        </Fragment>
       ))}
     </span>
   );

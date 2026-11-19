@@ -121,8 +121,9 @@ export function ServicesCall({
       }}
     >
       <div className="mx-auto max-w-(--container-page)">
-        <h2 className="max-w-[17ch] font-display text-h1 font-semibold tracking-[-0.035em] text-balance">
-          <ScrollRead text={statement} keep={keep} />
+        {/* two lines (owner 2026-11-19): the first sentence, then the second */}
+        <h2 className="font-display text-h1 font-semibold tracking-[-0.035em]">
+          <ScrollRead text={statement} keep={keep} breakAt="talent." />
         </h2>
 
         <div className="mt-16 border-t border-ink-line pt-12 lg:mt-24 lg:pt-16">

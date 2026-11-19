@@ -1155,7 +1155,7 @@ export function FriendStory({
           {/* while the film plays: stop it (Esc works too) */}
           <button
             type="button"
-            className="fs-close absolute right-(--gutter) bottom-5 z-20 flex items-center gap-2 rounded-full border border-ink/15 bg-paper/80 px-4 py-2 font-mono text-label tracking-[0.16em] text-ink uppercase backdrop-blur-sm transition-colors hover:border-signal hover:text-signal motion-reduce:hidden"
+            className="fs-close absolute right-(--gutter) bottom-5 z-20 flex min-h-11 items-center gap-2 rounded-full border border-ink/15 bg-paper/80 px-4 py-2 font-mono text-label tracking-[0.16em] text-ink uppercase backdrop-blur-sm transition-colors hover:border-signal hover:text-signal motion-reduce:hidden"
             tabIndex={-1}
           >
             {seat.close}

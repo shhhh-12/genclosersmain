@@ -109,7 +109,7 @@ export default function AboutPage() {
                         <img src={f.photo.src} alt={f.name} width={f.photo.width} height={f.photo.height} className="block aspect-square w-full object-cover object-top" />
                       </div>
                       {f.knownAs && (
-                        <span className="absolute -top-6 -right-6 grid size-[5.5rem] rotate-[12deg] place-items-center rounded-full border-[2.5px] border-ink bg-signal p-2 text-center font-display text-[length:max(0.875rem,calc(0.95rem*var(--type-scale)))] leading-[1.12] font-bold text-signal-ink">
+                        <span className="absolute -top-6 -right-6 grid size-[5.5rem] rotate-[12deg] place-items-center rounded-full border-[2.5px] border-ink bg-signal-deep p-2 text-center font-display text-[length:max(0.875rem,calc(0.95rem*var(--type-scale)))] leading-[1.12] font-bold text-signal-ink">
                           {f.knownAs}
                         </span>
                       )}

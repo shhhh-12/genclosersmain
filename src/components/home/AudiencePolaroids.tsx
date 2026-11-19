@@ -67,8 +67,8 @@ const SPOTS = [
   { l: 2, t: 10, r: -6 },
   { l: 36, t: 0, r: 4 },
   { l: 68, t: 34, r: -3 },
-  { l: 12, t: 326, r: 5 },
-  { l: 50, t: 314, r: -5 },
+  { l: 12, t: 296, r: 5 },
+  { l: 50, t: 284, r: -5 },
 ];
 
 export function AudiencePolaroids({ items, sticker, dragHint }: { items: readonly Card[]; sticker: string; dragHint: string }) {
@@ -130,14 +130,14 @@ export function AudiencePolaroids({ items, sticker, dragHint }: { items: readonl
 
   return (
     <div>
-      <ul ref={ref} className="pol-table -mx-(--gutter) flex snap-x gap-5 overflow-x-auto px-(--gutter) pb-6 lg:relative lg:mx-0 lg:block lg:h-[650px] lg:overflow-visible lg:px-0 lg:pb-0">
+      <ul ref={ref} className="pol-table -mx-(--gutter) flex snap-x gap-5 overflow-x-auto px-(--gutter) pb-6 lg:relative lg:mx-0 lg:block lg:h-[590px] lg:overflow-visible lg:px-0 lg:pb-0">
         {items.map((item, i) => {
           const sp = SPOTS[i % SPOTS.length];
           return (
             <li
               key={item.title}
               data-pol
-              className="pol group w-[250px] shrink-0 snap-center select-none lg:absolute"
+              className="pol group w-[225px] shrink-0 snap-center select-none lg:absolute"
               style={{ left: `${sp.l}%`, top: sp.t, ["--r" as string]: `${sp.r}deg` }}
             >
               <div className="pol-card relative rounded-[6px] border-[2.5px] border-ink bg-white p-3 pb-4 text-ink shadow-[7px_8px_0_0_rgba(0,0,0,0.55)]">

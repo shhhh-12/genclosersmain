@@ -30,7 +30,7 @@ export default function CoursesPage() {
           </div>
           <div className="mt-12 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
             {listedCourses.map((c) => (
-              <CourseFeature key={c.slug} course={c} showPrice />
+              <CourseFeature level={2} key={c.slug} course={c} showPrice />
             ))}
           </div>
         </div>
